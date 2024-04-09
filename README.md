@@ -81,11 +81,13 @@ Add below links at tne top of `ios/Podfile`:
 ```ruby
 source 'https://github.com/circlefin/w3s-ios-sdk.git'
 source 'https://cdn.cocoapods.org/'
+
+platform :ios, '13.4'
 ```
-Declare static link as below:
+Declare dynamic link as below:
 ```ruby
 target 'W3sSampleWallet' do
-  use_frameworks! :linkage => :static
+  use_frameworks!
 end
 ```
 And add the following `post_install` hook:
@@ -95,9 +97,7 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings["ONLY_ACTIVE_ARCH"] = "NO"
       config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
-    end
-    installer.pods_project.build_configurations.each do |config|
-      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
     end
   end
 end
