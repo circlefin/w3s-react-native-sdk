@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { WalletSdk } from './WalletSdk'
-export type { Error } from './types'
-export {
-  InputType,
-  ErrorCode,
-  IconTextConfig,
-  IconTextsKey,
-  ImageKey,
-  TextConfig,
-  TextsKey,
-  TextKey,
-  SecurityQuestion,
-  DateFormat
-} from './types'
+package com.circlefin.programmablewalletrnsdk
+
+import circle.programmablewallet.sdk.WalletSdk
+import com.facebook.react.bridge.ReactApplicationContext
+
+abstract class ProgrammablewalletRnSdkSpec internal constructor(context: ReactApplicationContext) :
+  NativeProgrammablewalletRnSdkSpec(context) {
+
+  override fun getTypedExportedConstants(): MutableMap<String, Any> {
+    val constants: MutableMap<String, Any> = HashMap()
+    constants["sdkVersion"] = WalletSdk.sdkVersion()
+    return constants
+  }
+}

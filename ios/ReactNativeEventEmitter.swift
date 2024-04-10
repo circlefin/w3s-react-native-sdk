@@ -11,17 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { WalletSdk } from './WalletSdk'
-export type { Error } from './types'
-export {
-  InputType,
-  ErrorCode,
-  IconTextConfig,
-  IconTextsKey,
-  ImageKey,
-  TextConfig,
-  TextsKey,
-  TextKey,
-  SecurityQuestion,
-  DateFormat
-} from './types'
+
+import Foundation
+
+@objc(ReactNativeEventEmitter)
+class ReactNativeEventEmitter: RCTEventEmitter {
+    
+    override init() {
+        super.init()
+        EventEmitter.sharedInstance.registerEventEmitter(eventEmitter: self)
+    }
+    
+    /// Base overide for RCTEventEmitter.
+    ///
+    /// - Returns: all supported events
+    @objc override func supportedEvents() -> [String] {
+        return EventEmitter.sharedInstance.allEvents
+    }
+    @objc override static func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+}

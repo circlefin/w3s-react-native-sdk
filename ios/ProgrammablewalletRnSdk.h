@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { WalletSdk } from './WalletSdk'
-export type { Error } from './types'
-export {
-  InputType,
-  ErrorCode,
-  IconTextConfig,
-  IconTextsKey,
-  ImageKey,
-  TextConfig,
-  TextsKey,
-  TextKey,
-  SecurityQuestion,
-  DateFormat
-} from './types'
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+#import "RNProgrammablewalletRnSdkSpec.h"
+#import <React/RCTEventEmitter.h>
+@interface ProgrammablewalletRnSdk : RCTEventEmitter <NativeProgrammablewalletRnSdkSpec>
+
+#else
+
+#import <React/RCTBridgeModule.h>
+@interface ProgrammablewalletRnSdk : NSObject <RCTBridgeModule>
+#endif
+
+@end

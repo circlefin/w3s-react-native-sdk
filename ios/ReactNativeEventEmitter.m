@@ -11,17 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { WalletSdk } from './WalletSdk'
-export type { Error } from './types'
-export {
-  InputType,
-  ErrorCode,
-  IconTextConfig,
-  IconTextsKey,
-  ImageKey,
-  TextConfig,
-  TextsKey,
-  TextKey,
-  SecurityQuestion,
-  DateFormat
-} from './types'
+
+#import <Foundation/Foundation.h>
+
+#import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h>
+
+@interface RCT_EXTERN_MODULE(ReactNativeEventEmitter, RCTEventEmitter)
+
+RCT_EXTERN_METHOD(supportedEvents)
+
+@end

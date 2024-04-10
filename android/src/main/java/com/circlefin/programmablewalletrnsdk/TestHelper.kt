@@ -11,17 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { WalletSdk } from './WalletSdk'
-export type { Error } from './types'
-export {
-  InputType,
-  ErrorCode,
-  IconTextConfig,
-  IconTextsKey,
-  ImageKey,
-  TextConfig,
-  TextsKey,
-  TextKey,
-  SecurityQuestion,
-  DateFormat
-} from './types'
+package com.circlefin.programmablewalletrnsdk
+
+import android.widget.ImageView
+import androidx.appcompat.widget.Toolbar
+
+object TestHelper {
+  private val TAG = TestHelper::class.java.simpleName
+
+  fun addTagForTest(iv: ImageView, tag: String) {
+    if (!BuildConfig.DEBUG) {
+      return
+    }
+    iv.tag = tag
+  }
+
+  fun addTagForTest(toolbar: Toolbar?, tag: String) {
+    if (!BuildConfig.DEBUG) {
+      return
+    }
+    toolbar?.tag = tag
+  }
+}
