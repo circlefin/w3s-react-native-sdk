@@ -88,7 +88,7 @@ extension RNWalletSdk {
                     guard let cell = cell as? SecurityQuestionTableViewCell else { continue }
 
                     if let configs = self.sTextsMap[.securityQuestionHeaders],
-                        let config = configs[safe: i] { // A5
+                       let config = configs[safe: i] { // A5
                         self.setText(label: cell.questionTitleLabel, textConfig: config)
                     }
                     if let textConfig = self.sTextMap[.circlepw_security_questions_required_mark] { // C13
@@ -96,7 +96,7 @@ extension RNWalletSdk {
                         self.setText(label: cell.answerMarkLabel, textConfig: textConfig)
                     }
                     if let textConfig = self.sTextMap[.circlepw_security_questions_question_placeholder],
-                        let label = cell.questionView.subviews.first as? UILabel { // C15
+                       let label = cell.questionView.subviews.first as? UILabel { // C15
                         self.setText(label: label, textConfig: textConfig)
                     }
 
@@ -138,9 +138,8 @@ extension RNWalletSdk {
             if let textConfig = sTextMap[.circlepw_select_question_item_config] { // C25
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     for cell in controller.tableView.visibleCells {
-                        // TODO: make SelectQuestionTableViewCell class public from SDK
-//                        guard let cell = cell as? SelectQuestionTableViewCell else { continue }
-//                        setText(label: cell.titleLabel, textConfig: textConfig, shouldReplaceText: false)
+                        guard let cell = cell as? SelectQuestionTableViewCell else { continue }
+                        self.setText(label: cell.titleLabel, textConfig: textConfig, shouldReplaceText: false)
                     }
                 }
             }
@@ -156,7 +155,7 @@ extension RNWalletSdk {
                     guard let cell = cell as? SecuritySummaryTableViewCell else { continue }
 
                     if let configs = self.sTextsMap[.securitySummaryQuestionHeaders],
-                        let config = configs[safe: i] { // A6
+                       let config = configs[safe: i] { // A6
                         self.setText(label: cell.titleLabel, textConfig: config)
                     }
 

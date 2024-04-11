@@ -94,22 +94,22 @@ public class RNWalletSdk: NSObject {
         }
     }
 
-    // TODO
     @objc public func executeWithUserSecret(_ userToken: String,
-                              encryptionKey: String,
-                              userSecret: String,
-                              challengeIds: NSArray,
-                              resolve: @escaping RCTPromiseResolveBlock,
-                              reject: @escaping RCTPromiseRejectBlock) {
+                                            encryptionKey: String,
+                                            userSecret: String,
+                                            challengeIds: NSArray,
+                                            resolve: @escaping RCTPromiseResolveBlock,
+                                            reject: @escaping RCTPromiseRejectBlock) {
         guard let challengeIdArr = challengeIds as? [String] else {
             reject(nil, "[unknown format] challengeIds", nil)
             return
         }
-        // copied from execute()
+
         DispatchQueue.main.async {
-            WalletSdk.shared.execute(userToken: userToken,
-                                     encryptionKey: encryptionKey,
-                                     challengeIds: challengeIdArr) { response in
+            WalletSdk.shared.executeWithUserSecret(userToken: userToken,
+                                                   encryptionKey: encryptionKey,
+                                                   userSecret: userSecret,
+                                                   challengeIds: challengeIdArr) { response in
                 switch response.result {
                 case .success(let result):
                     self._handleSuccessResult(result: result,
@@ -209,22 +209,10 @@ public class RNWalletSdk: NSObject {
     @objc public func setImageMap(_ map: NSDictionary) {
         for (key, value) in map {
             guard let key = key as? String,
-                    let value = value as? String else { continue }
-
-            if let imgKey = BridgeHelper.getImageKey(rnKey: key) {
-                if value.starts(with: "http") {
-                    sRemote[imgKey] = URL(string: value)
-                } else {
-                    var url = URL(string: value)
-                    if let url = url {
-                        if #available(iOS 16.0, *) {
-                            sLocal[imgKey] = UIImage.init(contentsOfFile: url.path())
-                        } else {
-                            // TODO
-                        }
-                    }
-                }
-            }
+                  let value = value as? String,
+                  let imgUrl = URL(string: value),
+                  let imgKey = BridgeHelper.getImageKey(rnKey: key) else { continue }
+            sRemote[imgKey] = imgUrl
         }
     }
 

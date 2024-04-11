@@ -28,6 +28,7 @@ class ReactNativeEventEmitter: RCTEventEmitter {
     @objc override func supportedEvents() -> [String] {
         return EventEmitter.sharedInstance.allEvents
     }
+    
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
     }

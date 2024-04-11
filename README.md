@@ -1,5 +1,4 @@
 # @circle-fin/w3s-pw-react-native-sdk
-
 React Native SDK for Circle Programmable Wallet
 ## Install NVM
 
