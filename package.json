@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -26,7 +26,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @circle-fin/programmablewallet-rn-sdk-example",
+    "example": "yarn workspace @circle-fin/w3s-pw-react-native-sdk-example",
     "test": "jest",
     "npm": "npm",
     "typecheck": "tsc --noEmit",
