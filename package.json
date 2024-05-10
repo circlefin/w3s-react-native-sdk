@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -13,7 +13,7 @@
     "android",
     "ios",
     "*.podspec",
-    "COPYRIGHT*",
+    "COPYRIGHT",
     "!ios/build",
     "!android/build",
     "!android/gradle",
@@ -28,14 +28,13 @@
   "scripts": {
     "example": "yarn workspace @circle-fin/w3s-pw-react-native-sdk-example",
     "test": "jest",
-    "npm": "npm",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
     "release": "release-it",
     "pod-install-new": "RCT_NEW_ARCH_ENABLED=1 bundle exec pod install",
-    "publish:sdk": "npm publish"
+    "publish:sdk": "npm publish --registry https://registry.npmjs.org/"
   },
   "keywords": [
     "circle",
@@ -49,14 +48,13 @@
     "ios",
     "android"
   ],
-  "author": "Circle Inc.",
+  "author": "Circle Internet Financial, LTD.",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/circlefin/w3s-react-native-sdk/issues"
   },
   "homepage": "https://github.com/circlefin/w3s-react-native-sdk#readme",
   "publishConfig": {
-    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
@@ -108,26 +106,18 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}",
-      "requireCleanWorkingDir": false,
-      "push": false,
-      "commit": false,
-      "tag": false
+      "tagName": "v${version}"
     },
     "npm": {
-      "publish": false,
-      "skipChecks": true
+      "publish": true
     },
     "github": {
-      "release": false
+      "release": true
     },
     "plugins": {
       "@release-it/conventional-changelog": {
         "preset": "angular"
       }
-    },
-    "publishConfig": {
-      "registry": "https://registry.npmjs.org"
     }
   },
   "eslintConfig": {
