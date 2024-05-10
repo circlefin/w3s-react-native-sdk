@@ -53,16 +53,21 @@ const emitter =
 const EVENT_NAME_ON_EVENT = 'CirclePwOnEvent'
 const EVENT_NAME_ON_SUCCESS = 'CirclePwOnSuccess'
 const EVENT_NAME_ON_ERROR = 'CirclePwOnError'
+const USER_AGENT_RN = 'Circle-Programmable-Wallet-SDK-RN'
+
 export const WalletSdk = ((): IWalletSdk => {
   const constants = WalletSdkModule.getConstants()
+  const defaultUserAgentRn = USER_AGENT_RN + '/' + packageJson.version
   return {
     sdkVersion: {
       native: constants.sdkVersion,
       rn: packageJson.version,
     },
-    deviceId: WalletSdkModule.getDeviceId() ?? constants.deviceId,
+    deviceId: Platform.OS === 'ios' ? constants.deviceId : (WalletSdkModule.getDeviceId() ?? constants.deviceId),
     init(configuration: Configuration): Promise<void> {
-      return WalletSdkModule.initSdk(configuration)
+      const promise = WalletSdkModule.initSdk(configuration)
+      WalletSdkModule.setCustomUserAgent(defaultUserAgentRn)
+      return promise
     },
     setSecurityQuestions(securityQuestions: SecurityQuestion[]): void {
       WalletSdkModule.setSecurityQuestions(securityQuestions)
@@ -74,7 +79,7 @@ export const WalletSdk = ((): IWalletSdk => {
       emitter.removeAllListeners(EVENT_NAME_ON_EVENT)
     },
     getDeviceId(): string {
-      return WalletSdkModule.getDeviceId()
+      return Platform.OS === 'ios' ? constants.deviceId : (WalletSdkModule.getDeviceId() ?? constants.deviceId)
     },
     execute(
       userToken: string,
@@ -166,7 +171,6 @@ export const WalletSdk = ((): IWalletSdk => {
           // @ts-ignore
           map[key] = newConfigs
         }
-        console.log('IconTextConfigs_map:' + JSON.stringify(map))
         WalletSdkModule.setIconTextConfigsMap(map)
       } catch (e) {
         console.error(e)
@@ -191,7 +195,6 @@ export const WalletSdk = ((): IWalletSdk => {
           // @ts-ignore
           map[key] = url
         }
-        console.log('Image_map:' + JSON.stringify(map))
         WalletSdkModule.setImageMap(map)
       } catch (e) {
         console.error(e)
@@ -204,7 +207,7 @@ export const WalletSdk = ((): IWalletSdk => {
       WalletSdkModule.setDebugging(debugging)
     },
     setCustomUserAgent(userAgent: string): void {
-      WalletSdkModule.setCustomUserAgent(userAgent)
+      WalletSdkModule.setCustomUserAgent(defaultUserAgentRn + ' | ' + userAgent)
     },
     setErrorStringMap(map: Map<ErrorCode, string>): void {
       try {
