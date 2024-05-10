@@ -120,12 +120,13 @@ RCT_EXPORT_METHOD(getDeviceId)
 
 - (NSDictionary *)getConstants
 {
-    return @{ @"sdkVersion": [sdk sdkVersion] };
+    return @{ @"sdkVersion": [sdk sdkVersion],
+              @"deviceId": [sdk getDeviceId]};
 }
 - (NSDictionary *)constantsToExport
 {
     return @{ @"sdkVersion": [sdk sdkVersion],
-              @"deviceId": [sdk getDeviceId] };
+              @"deviceId": [sdk getDeviceId]};
 }
 + (BOOL)requiresMainQueueSetup
 {

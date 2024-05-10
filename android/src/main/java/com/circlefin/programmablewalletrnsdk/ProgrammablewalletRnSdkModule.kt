@@ -156,7 +156,7 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
 
   @ReactMethod
   override fun getDeviceId(): String {
-    return WalletSdk.getDeviceId(reactContext) ?: "123"
+    return WalletSdk.getDeviceId(reactContext) ?: ""
   }
   @ReactMethod
   override fun execute(
