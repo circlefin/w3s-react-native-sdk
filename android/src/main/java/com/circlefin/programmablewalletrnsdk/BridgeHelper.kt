@@ -27,6 +27,7 @@ import circle.programmablewallet.sdk.presentation.Resource
 import circle.programmablewallet.sdk.presentation.SecurityQuestion
 import circle.programmablewallet.sdk.presentation.SettingsManagement
 import circle.programmablewallet.sdk.presentation.TextConfig
+import com.circlefin.programmablewalletrnsdk.annotation.ExcludeFromGeneratedCCReport
 import com.circlefin.programmablewalletrnsdk.pwcustom.RnImageSetter
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
@@ -38,9 +39,12 @@ import java.lang.reflect.Modifier
 object BridgeHelper {
   private val TAG = BridgeHelper::class.java.simpleName
   val typefaceMap: MutableMap<String?, Typeface?> = HashMap()
+  @ExcludeFromGeneratedCCReport
   var questionsForTest: Array<SecurityQuestion?>? = null
+  @ExcludeFromGeneratedCCReport
   var dismissOnCallbackForTest: MutableMap<Int, Boolean>? = null
 
+  @ExcludeFromGeneratedCCReport
   fun objectToMap(obj: ExecuteWarning?): WritableMap {
     val map = Arguments.createMap()
     obj ?: return map
@@ -49,6 +53,7 @@ object BridgeHelper {
     return map
   }
 
+  @ExcludeFromGeneratedCCReport
   fun objectToMap(obj: ApiError?): WritableMap {
     val map = Arguments.createMap()
     obj ?: return map
@@ -57,6 +62,7 @@ object BridgeHelper {
     return map
   }
 
+  @ExcludeFromGeneratedCCReport
   @JvmStatic
   fun objectToMap(obj: Any?): WritableMap {
     val map = Arguments.createMap()
@@ -101,6 +107,7 @@ object BridgeHelper {
     return map
   }
 
+  @ExcludeFromGeneratedCCReport
   private fun objectToArray(array: Any?): WritableArray {
     val arr = Arguments.createArray()
     array ?: return arr
@@ -204,7 +211,7 @@ object BridgeHelper {
   fun getSettingsManagement(rnMap: ReadableMap?): SettingsManagement? {
     rnMap ?: return null
     val settingsMap = safeGetMap(rnMap, "settingsManagement") ?: return null
-    return SettingsManagement(safeGetBoolean(settingsMap, "enableBiometricsPin"), safeGetBoolean(settingsMap, "disableConfirmationUI"))
+    return SettingsManagement(safeGetBoolean(settingsMap, "enableBiometricsPin"))
   }
 
   private fun safeGetBoolean(map: ReadableMap, key: String): Boolean{

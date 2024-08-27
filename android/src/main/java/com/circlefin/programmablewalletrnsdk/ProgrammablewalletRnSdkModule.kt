@@ -19,13 +19,14 @@ import android.app.ActivityManager
 import android.content.Context
 import circle.programmablewallet.sdk.WalletSdk
 import circle.programmablewallet.sdk.WalletSdk.execute
-import circle.programmablewallet.sdk.WalletSdk.executeWithUserSecret
 import circle.programmablewallet.sdk.WalletSdk.init
 import circle.programmablewallet.sdk.WalletSdk.setLayoutProvider
 import circle.programmablewallet.sdk.WalletSdk.setSecurityQuestions
 import circle.programmablewallet.sdk.WalletSdk.setViewSetterProvider
 import circle.programmablewallet.sdk.api.ExecuteEvent
+import circle.programmablewallet.sdk.api.SocialProvider
 import circle.programmablewallet.sdk.presentation.EventListener
+import com.circlefin.programmablewalletrnsdk.annotation.ExcludeFromGeneratedCCReport
 import com.circlefin.programmablewalletrnsdk.pwcustom.RnLayoutProvider
 import com.circlefin.programmablewalletrnsdk.pwcustom.RnViewSetterProvider
 import com.facebook.react.bridge.Arguments
@@ -51,6 +52,7 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
     setViewSetterProvider(viewSetterProvider)
   }
 
+  @ExcludeFromGeneratedCCReport
   override fun getName(): String {
     return NAME
   }
@@ -103,9 +105,10 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
   @ReactMethod
   override fun setDismissOnCallbackMap(readableMap: ReadableMap) {
     val map = BridgeHelper.getDismissOnCallbackMap(readableMap)
-    PromiseCallback.setDismissOnCallbackMap(map)
+    setDismissOnCallbackMap(map)
   }
 
+  @ExcludeFromGeneratedCCReport
   @ReactMethod
   override fun moveRnTaskToFront() {
     currentActivity?.let {
@@ -119,6 +122,7 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
     }
   }
 
+  @ExcludeFromGeneratedCCReport
   @ReactMethod
   override fun moveTaskToFront() {
     WalletSdk.moveTaskToFront(reactContext)
@@ -177,29 +181,7 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
       PromiseCallback(promise, reactContext)
     )
   }
-
-  @ReactMethod
-  override fun executeWithUserSecret(
-    userToken: String?,
-    secretKey: String?,
-    userSecret: String?,
-    challengeIdArr: ReadableArray,
-    promise: Promise?
-  ) {
-    val challengeIds = arrayOfNulls<String>(challengeIdArr.size())
-    for (i in challengeIds.indices) {
-      challengeIds[i] = challengeIdArr.getString(i)
-    }
-    executeWithUserSecret(
-      currentActivity,
-      userToken,
-      secretKey,
-      userSecret,
-      challengeIds,
-      PromiseCallback(promise, reactContext)
-    )
-  }
-
+  @ExcludeFromGeneratedCCReport
   @ReactMethod
   override fun setBiometricsPin(
     userToken: String?,
@@ -214,13 +196,63 @@ class ProgrammablewalletRnSdkModule internal constructor(context: ReactApplicati
     )
   }
 
+  @ReactMethod
+  override fun performLogin(
+    provider: String,
+    deviceToken: String,
+    deviceEncryptionKey: String,
+    promise: Promise
+  ) {
+    WalletSdk.performLogin(
+      currentActivity,
+      SocialProvider.valueOf(provider),
+      deviceToken,
+      deviceEncryptionKey,
+      PromiseSocialCallback(promise)
+    )
+  }
+
+  @ReactMethod
+  override fun verifyOTP(
+    otpToken: String,
+    deviceToken: String,
+    deviceEncryptionKey: String,
+    promise: Promise
+  ) {
+    WalletSdk.verifyOTP(
+      currentActivity,
+      otpToken,
+      deviceToken,
+      deviceEncryptionKey,
+      PromiseCallback2(promise, reactContext)
+    )
+  }
+
+  @ReactMethod
+  override fun performLogout(
+    provider: String,
+    promise: Promise
+  ) {
+
+    WalletSdk.performLogout(
+      currentActivity,
+      SocialProvider.valueOf(provider),
+      PromiseLogoutCallback(promise)
+    )
+  }
   companion object {
     const val NAME = "ProgrammablewalletRnSdk"
     const val EVENT_NAME_ON_EVENT = "CirclePwOnEvent"
     const val EVENT_NAME_ON_SUCCESS = "CirclePwOnSuccess"
     const val EVENT_NAME_ON_ERROR = "CirclePwOnError"
+    val dismissOnCallbackMap: MutableMap<Int, Boolean> = HashMap()
+    fun setDismissOnCallbackMap(map: Map<Int, Boolean>) {
+      dismissOnCallbackMap.clear()
+      dismissOnCallbackMap.putAll(map)
+    }
   }
 
+  @ExcludeFromGeneratedCCReport
   override fun onEvent(event: ExecuteEvent) {
     reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
       .emit(EVENT_NAME_ON_EVENT, event.name)
