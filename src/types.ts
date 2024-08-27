@@ -30,18 +30,29 @@ export interface IWalletSdk {
     successCallback: SuccessCallback,
     errorCallback: ErrorCallback,
   ) => void;
-  executeWithUserSecret: (
-    userToken: string,
-    encryptionKey: string,
-    userSecret: string,
-    challengeIds: string[],
-    successCallback: SuccessCallback,
-    errorCallback: ErrorCallback,
-  ) => void;
   setBiometricsPin: (
     userToken: string,
     encryptionKey: string,
     successCallback: SuccessCallback,
+    errorCallback: ErrorCallback,
+  ) => void;
+  performLogin: (
+    provider: SocialProvider,
+    deviceToken: string,
+    deviceEncryptionKey: string,
+    successCallback: LoginSuccessCallback,
+    errorCallback: ErrorCallback,
+  ) => void;
+  verifyOTP: (
+    otpToken: string,
+    deviceToken: string,
+    deviceEncryptionKey: string,
+    successCallback: LoginSuccessCallback,
+    errorCallback: ErrorCallback,
+  ) => void;
+  performLogout: (
+    provider: SocialProvider,
+    completeCallback: CompleteCallback,
     errorCallback: ErrorCallback,
   ) => void;
   setDismissOnCallbackMap: (map: Map<ErrorCode, boolean>) => void;
@@ -151,6 +162,49 @@ export enum TextKey {
   circlepw_swipe_bt_confirming = 'circlepw_swipe_bt_confirming',
   circlepw_swipe_bt_confirmed = 'circlepw_swipe_bt_confirmed',
   circlepw_swipe_bt_try_again = 'circlepw_swipe_bt_try_again',
+  circlepw_transaction_request_title = 'circlepw_transaction_request_title',
+  circlepw_transaction_request_subtitle = 'circlepw_transaction_request_subtitle',
+  circlepw_transaction_request_main_currency = 'circlepw_transaction_request_main_currency',
+  circlepw_transaction_request_exchange_value = 'circlepw_transaction_request_exchange_value',
+  circlepw_transaction_request_from_label = 'circlepw_transaction_request_from_label',
+  circlepw_transaction_request_from = 'circlepw_transaction_request_from',
+  circlepw_transaction_request_to_label = 'circlepw_transaction_request_to_label',
+  circlepw_transaction_request_to_config = 'circlepw_transaction_request_to_config',
+  circlepw_transaction_request_to_contract_name = 'circlepw_transaction_request_to_contract_name',
+  circlepw_transaction_request_to_contract_url = 'circlepw_transaction_request_to_contract_url',
+  circlepw_transaction_request_network_fee_label = 'circlepw_transaction_request_network_fee_label',
+  circlepw_transaction_request_network_fee = 'circlepw_transaction_request_network_fee',
+  circlepw_transaction_request_exchange_network_fee = 'circlepw_transaction_request_exchange_network_fee',
+  circlepw_transaction_request_total_label = 'circlepw_transaction_request_total_label',
+  circlepw_transaction_request_total_config = 'circlepw_transaction_request_total_config',
+  circlepw_transaction_request_exchange_total_value = 'circlepw_transaction_request_exchange_total_value',
+  circlepw_transaction_request_error_config = 'circlepw_transaction_request_error_config',
+  circlepw_transaction_request_fee_tip = 'circlepw_transaction_request_fee_tip',
+  circlepw_contract_interaction_contract_address_label = 'circlepw_contract_interaction_contract_address_label',
+  circlepw_contract_interaction_contract_address_config = 'circlepw_contract_interaction_contract_address_config',
+  circlepw_contract_interaction_data_details = 'circlepw_contract_interaction_data_details',
+  circlepw_contract_interaction_abi_function_label = 'circlepw_contract_interaction_abi_function_label',
+  circlepw_contract_interaction_abi_function_config = 'circlepw_contract_interaction_abi_function_config',
+  circlepw_contract_interaction_abi_parameter_label = 'circlepw_contract_interaction_abi_parameter_label',
+  circlepw_contract_interaction_call_data_label = 'circlepw_contract_interaction_call_data_label',
+  circlepw_contract_interaction_call_data_config = 'circlepw_contract_interaction_call_data_config',
+  circlepw_transaction_request_raw_tx_description = 'circlepw_transaction_request_raw_tx_description',
+  circlepw_transaction_request_raw_tx_config = 'circlepw_transaction_request_raw_tx_config',
+  circlepw_signature_request_title = 'circlepw_signature_request_title',
+  circlepw_signature_request_contract_name = 'circlepw_signature_request_contract_name',
+  circlepw_signature_request_contract_url = 'circlepw_signature_request_contract_url',
+  circlepw_signature_request_subtitle = 'circlepw_signature_request_subtitle',
+  circlepw_signature_request_description = 'circlepw_signature_request_description',
+  circlepw_signature_request_msg_config = 'circlepw_signature_request_msg_config',
+  circlepw_sign = 'circlepw_sign',
+  circlepw_try_again = 'circlepw_try_again',
+  circlepw_email_otp_title = 'circlepw_email_otp_title',
+  circlepw_email_otp_description = 'circlepw_email_otp_description',
+  circlepw_email_otp_email = 'circlepw_email_otp_email',
+  circlepw_email_otp_head_config = 'circlepw_email_otp_head_config',
+  circlepw_email_otp_dash = 'circlepw_email_otp_dash',
+  circlepw_email_otp_send_again_hint = 'circlepw_email_otp_send_again_hint',
+  circlepw_email_otp_send_again = 'circlepw_email_otp_send_again',
 }
 
 export enum ImageKey {
@@ -165,8 +219,11 @@ export enum ImageKey {
   showPin = 'showPin',
   hidePin = 'hidePin',
   alertWindowIcon = 'alertWindowIcon',
-  swipeItemIcon = 'swipeItemIcon',
-  swipeBtConfirmed = 'swipeBtConfirmed',
+  transactionTokenIcon = 'transactionTokenIcon',
+  networkFeeTipIcon = 'networkFeeTipIcon',
+  showLessDetailArrow = 'showLessDetailArrow',
+  showMoreDetailArrow = 'showMoreDetailArrow',
+  requestIcon = 'requestIcon',
 }
 
 export enum DateFormat {
@@ -259,7 +316,10 @@ export enum ErrorCode {
   biometricsUserNotAllowPermission = '155715',
   biometricsInternalError = '155716',
   userSecretMissing = '155717',
-  invalidUserSecret = '155718',
+  invalidUserTokenFormat = '155718',
+  userTokenMismatch = '155719',
+  socialLoginFailed = '155720',
+  loginInfoMissing = '155721',
 }
 
 export class SecurityQuestion {
@@ -280,6 +340,8 @@ export interface Configuration {
 
 export type EventListener = (event: ExecuteEvent) => void
 export type SuccessCallback = (result: SuccessResult) => void
+export type LoginSuccessCallback = (result: LoginResult) => void
+export type CompleteCallback = () => void
 export type ErrorCallback = (error: Error) => void
 export interface SdkVersion {
   native: string;
@@ -294,6 +356,26 @@ export interface SuccessResult {
 export interface Error {
   code?: string;
   message: string;
+}
+
+export interface LoginResult {
+  userToken?: string;
+  encryptionKey?: string;
+  refreshToken?: string;
+  oauthInfo?: OauthInfo;
+}
+
+export interface OauthInfo {
+  provider?: string;
+  scope?: string[];
+  socialUserUUID?: string;
+  socialUserInfo?: SocialUserInfo;
+}
+
+export interface SocialUserInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface ExecuteResult {
@@ -315,7 +397,6 @@ export interface ExecuteResultData {
 
 export interface SettingsManagement {
   enableBiometricsPin: boolean;
-  disableConfirmationUI: boolean;
 }
 
 export class IconTextConfig {
@@ -334,8 +415,8 @@ export class TextConfig {
   textColor?: string
   font?: string
   constructor(
-    text: string,
-    gradientColorsOrTextColor: string[] | string,
+    text?: string,
+    gradientColorsOrTextColor?: string[] | string,
     font?: string,
   ) {
     this.text = text
@@ -359,6 +440,7 @@ export enum ExecuteResultStatus {
 
 export enum ExecuteEvent {
   forgotPin = 'forgotPin',
+  resendOtp = 'resendOtp',
 }
 
 export enum ExecuteResultType {
@@ -379,4 +461,10 @@ export enum ExecuteResultType {
 export enum InputType {
   text = 'text',
   datePicker = 'datePicker',
+}
+
+export enum SocialProvider {
+  Google = 'Google',
+  Facebook = 'Facebook',
+  Apple = 'Apple',
 }
