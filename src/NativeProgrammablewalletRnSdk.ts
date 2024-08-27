@@ -29,16 +29,25 @@ export interface Spec extends TurboModule {
     challengeIds: string[],
   ): Promise<Object>;
 
-  executeWithUserSecret(
-    userToken: string,
-    encryptionKey: string,
-    userSecret: string,
-    challengeIds: string[],
-  ): Promise<Object>;
-
   getDeviceId(): string;
 
   setBiometricsPin(userToken: string, encryptionKey: string): Promise<Object>;
+
+  performLogin(
+    provider: string,
+    deviceToken: string,
+    deviceEncryptionKey: string,
+  ): Promise<Object>;
+
+  verifyOTP(
+    otpToken: string,
+    deviceToken: string,
+    deviceEncryptionKey: string,
+  ): Promise<Object>;
+
+  performLogout(
+    provider: string,
+  ): Promise<Object>;
 
   setDismissOnCallbackMap(map: Object): void;
 
