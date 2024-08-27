@@ -37,7 +37,13 @@ import {
   type TextKey,
   type TextsKey,
   type ErrorCallback,
-  type SuccessCallback, type Error, DateFormat,
+  type SuccessCallback,
+  type Error,
+  DateFormat,
+  SocialProvider,
+  type LoginSuccessCallback,
+  type CompleteCallback,
+  type LoginResult,
 } from './types'
 import packageJson from '../package.json'
 
@@ -102,21 +108,6 @@ export const WalletSdk = ((): IWalletSdk => {
           emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
         })
     },
-    executeWithUserSecret(userToken: string, encryptionKey: string, userSecret: string, challengeIds: string[], successCallback: SuccessCallback, errorCallback: ErrorCallback): void {
-      emitter.addListener(EVENT_NAME_ON_SUCCESS, successCallback)
-      emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
-      WalletSdkModule.executeWithUserSecret(userToken, encryptionKey, userSecret, challengeIds)
-        .then((successResult: SuccessResult) => {
-          successCallback(successResult)
-        })
-        .catch((e: Error) => {
-          errorCallback(e)
-        })
-        .finally(() => {
-          emitter.removeAllListeners(EVENT_NAME_ON_SUCCESS)
-          emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
-        })
-    },
     setBiometricsPin(
       userToken: string,
       encryptionKey: string,
@@ -135,6 +126,37 @@ export const WalletSdk = ((): IWalletSdk => {
         .finally(() => {
           emitter.removeAllListeners(EVENT_NAME_ON_SUCCESS)
           emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
+        })
+    },
+    performLogin(provider: SocialProvider, deviceToken: string, deviceEncryptionKey: string, successCallback: LoginSuccessCallback, errorCallback: ErrorCallback): void {
+      WalletSdkModule.performLogin(provider, deviceToken, deviceEncryptionKey)
+        .then((result: LoginResult) => {
+          successCallback(result)
+        })
+        .catch((e: Error) => {
+          errorCallback(e)
+        })
+    },
+    verifyOTP(otpToken: string, deviceToken: string, deviceEncryptionKey: string, successCallback: LoginSuccessCallback, errorCallback: ErrorCallback): void {
+      emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
+      WalletSdkModule.verifyOTP(otpToken, deviceToken, deviceEncryptionKey)
+        .then((result: LoginResult) => {
+          successCallback(result)
+        })
+        .catch((e: Error) => {
+          errorCallback(e)
+        })
+        .finally(() => {
+          emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
+        })
+    },
+    performLogout(provider: SocialProvider, completeCallback: CompleteCallback, errorCallback: ErrorCallback): void {
+      WalletSdkModule.performLogout(provider)
+        .then(() => {
+          completeCallback()
+        })
+        .catch((e: Error) => {
+          errorCallback(e)
         })
     },
     setDismissOnCallbackMap(map: Map<ErrorCode, boolean>): void {
