@@ -21,7 +21,7 @@ extension RNWalletSdk {
 
     func customizeAdapter(controller: UIViewController) {
 
-        // UI Flow - New PIN
+        // MARK: UI Flow - New PIN
 
         if let controller = controller as? NewPINCodeViewController {
             if let configs = sTextsMap[.newPinCodeHeadline] { // A1
@@ -197,7 +197,7 @@ extension RNWalletSdk {
             }
         }
 
-        // UI Flow - Enter PIN
+        // MARK: UI Flow - Enter PIN
 
         if let controller = controller as? EnterPINCodeViewController {
             if let configs = sTextsMap[.enterPinCodeHeadline] { // A2
@@ -223,7 +223,7 @@ extension RNWalletSdk {
             }
         }
 
-        // UI Flow - Recover PIN
+        // MARK: UI Flow - Recover PIN
 
         if let controller = controller as? RecoverPINCodeViewController {
             if let configs = sTextsMap[.recoverPinCodeHeadline] { // A7
@@ -237,7 +237,7 @@ extension RNWalletSdk {
             }
 
             if let textConfig = self.sTextMap[.circlepw_recover_pincode_error_config] { // C38
-                self.setText(label: controller.errorMessageLabel, textConfig: textConfig)
+                self.setText(label: controller.errorMessageLabel, textConfig: textConfig, shouldReplaceText: false)
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -276,7 +276,7 @@ extension RNWalletSdk {
             }
         }
 
-        // UI Flow - Biometrics
+        // MARK: UI Flow - Biometrics
 
         if let controller = controller as? BiometricsPromptViewController {
             if let textConfig = sTextMap[.circlepw_pin_biometrics_allow_title] { // C46
@@ -293,6 +293,177 @@ extension RNWalletSdk {
             }
             if let textConfig = sTextMap[.circlepw_pin_biometrics_disable] { // C49
                 setText(button: controller.dontAskButton, textConfig: textConfig)
+            }
+        }
+
+        // MARK: UI Flow - Transaction Request
+
+        if let controller = controller as? BaseRequestViewController {
+            if let textConfig = sTextMap[.circlepw_transaction_request_title] { // C63
+                setText(label: controller.baseNaviTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_subtitle] { // C64
+                setText(label: controller.descriptionLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_error_config] { // C79
+                setText(label: controller.errorLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_confirm] { // C45
+                setText(button: controller.confirmButton, textConfig: textConfig)
+            }
+        }
+
+        if let controller = controller as? TransactionRequestViewController {
+            if let textConfig = sTextMap[.circlepw_transaction_request_main_currency] { // C65
+                setText(label: controller.currencyLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_exchange_value] { // C66
+                setText(label: controller.txFiatValueLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_from_label] { // C67
+                setText(label: controller.fromTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_from] { // C68
+                setText(label: controller.fromLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_to_label] { // C69
+                setText(label: controller.toTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_to_config] { // C70
+                setText(label: controller.toLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_to_contract_name] { // C71
+                setText(label: controller.toContractNameLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_to_contract_url] { // C72
+                setText(label: controller.toContractURLLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_network_fee_label] { // C73
+                setText(label: controller.feeTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_network_fee] { // C74
+                setText(label: controller.feeLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_exchange_network_fee] { // C75
+                setText(label: controller.feeFiatValueLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_total_label] { // C76
+                setText(label: controller.totalTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_total_config] { // C77
+                setText(label: controller.totalLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_exchange_total_value] { // C78
+                setText(label: controller.totalFiatValueLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+
+        }
+
+        if let controller = controller as? FeeTipViewController {
+            if let textConfig = sTextMap[.circlepw_transaction_request_fee_tip] { // C80
+                setText(label: controller.descriptionLabel, textConfig: textConfig)
+            }
+        }
+
+        // MARK: UI Flow - Raw Transaction Request
+
+        if let controller = controller as? RawTransactionRequestViewController {
+            if let textConfig = sTextMap[.circlepw_transaction_request_raw_tx_description] { // C89
+                setText(label: controller.rawTxTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_transaction_request_raw_tx_config] { // C90
+                setText(label: controller.rawTxLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+        }
+
+        // MARK: UI Flow - Contract Interaction Request
+
+        if let controller = controller as? ContractRequestViewController {
+            if let textConfig = sTextMap[.circlepw_contract_interaction_title] { // C?
+                setText(label: controller.baseNaviTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_subtitle] { // C?
+                setText(label: controller.descriptionLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_contract_address_label] { // C81
+                setText(label: controller.contractAddressTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_contract_address_config] { // C82
+                setText(label: controller.contractAddressLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_data_details] { // C83
+                setText(label: controller.dataDetailsLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_abi_function_label] { // C84
+                setText(label: controller.abiFunctionTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_abi_function_config] { // C85
+                setText(label: controller.abiFunctionLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_abi_parameter_label] { // C86
+                setText(label: controller.abiParameterTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_call_data_label] { // C87
+                setText(label: controller.callDataTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_contract_interaction_call_data_config] { // C88
+                setText(label: controller.abiParameterLabel, textConfig: textConfig, shouldReplaceText: false)
+                setText(label: controller.callDataLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+        }
+
+        // MARK: UI Flow - Signature Request
+
+        if let controller = controller as? SignatureRequestViewController {
+            if let textConfig = sTextMap[.circlepw_signature_request_title] { // C91
+                setText(label: controller.titleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_signature_request_contract_name] { // C92
+                setText(label: controller.contractNameLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_signature_request_contract_url] { // C93
+                setText(label: controller.contractURLLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_signature_request_subtitle] { // C94
+                setText(label: controller.subtitleLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_signature_request_description] { // C95
+                setText(label: controller.descriptionLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_signature_request_msg_config] { // C96
+                setText(label: controller.messageLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_confirm] { // C45
+                setText(button: controller.confirmButton, textConfig: textConfig)
+            }
+        }
+
+        // MARK: UI Flow - Email OTP
+
+        if let controller = controller as? EmailOTPViewController {
+            if let textConfig = sTextMap[.circlepw_email_otp_title] { // C99
+                setText(label: controller.baseNaviTitleLabel, textConfig: textConfig)
+            }
+            if let textConfig1 = sTextMap[.circlepw_email_otp_description],
+               let textConfig2 = sTextMap[.circlepw_email_otp_email] { // C100, C101
+                var textConfig = textConfig1
+                if let text2 = textConfig2.text {
+                    textConfig.text?.append(" ")
+                    textConfig.text?.append(text2)
+                }
+                setText(label: controller.descriptionLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_email_otp_head_config] { // C102
+                setText(label: controller.otpHeadLabel, textConfig: textConfig, shouldReplaceText: false)
+            }
+            if let textConfig = sTextMap[.circlepw_email_otp_dash] { // C103
+                setText(label: controller.otpDashLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_email_otp_send_again_hint] { // C104
+                setText(label: controller.sendAgainHintLabel, textConfig: textConfig)
+            }
+            if let textConfig = sTextMap[.circlepw_email_otp_send_again] { // C105
+                setText(button: controller.sendAgainButton, textConfig: textConfig)
             }
         }
     }

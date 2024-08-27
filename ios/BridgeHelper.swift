@@ -71,12 +71,7 @@ class BridgeHelper: NSObject {
                         } else {
                             var url = URL(string: image)
                             if let url = url {
-                                if #available(iOS 16.0, *) {
-                                    items.append(SecurityConfirmItem(image: UIImage.init(contentsOfFile: url.path()), text: text))
-                                } else {
-                                    // TODO
-                                    items.append(SecurityConfirmItem(text: text))
-                                }
+                                items.append(SecurityConfirmItem(image: UIImage(contentsOfFile: url.path), text: text))
                             }
                         }
                     } else{
