@@ -76,21 +76,21 @@ public class RNWalletSdk: NSObject {
         DispatchQueue.main.async {
             WalletSdk.shared.execute(userToken: userToken,
                                      encryptionKey: encryptionKey,
-                                     challengeIds: challengeIdArr) { response in
-                switch response.result {
-                case .success(let result):
-                    self._handleSuccessResult(result: result,
-                                              onWarning: response.onWarning,
-                                              controller: response.onErrorController,
+                                     challengeIds: challengeIdArr) { executeCompletion in
+                switch executeCompletion.result {
+                case .success(let executeResult):
+                    self._handleExecuteResult(result: executeResult,
+                                              onWarning: executeCompletion.onWarning,
+                                              controller: executeCompletion.onErrorController,
                                               resolve: resolve)
 
                 case .failure(let error):
                     self._handleErrorResult(error: error,
-                                            controller: response.onErrorController,
+                                            controller: executeCompletion.onErrorController,
                                             reject: reject)
                 }
 
-                // TODO: Remove cache controller for different use cases
+                // Remove cache controller
                 self.sdkNavigationController = nil
             }
         }
@@ -102,32 +102,7 @@ public class RNWalletSdk: NSObject {
                                             challengeIds: NSArray,
                                             resolve: @escaping RCTPromiseResolveBlock,
                                             reject: @escaping RCTPromiseRejectBlock) {
-        guard let challengeIdArr = challengeIds as? [String] else {
-            reject(nil, "[unknown format] challengeIds", nil)
-            return
-        }
-
-        DispatchQueue.main.async {
-            WalletSdk.shared.executeWithUserSecret(userToken: userToken,
-                                                   encryptionKey: encryptionKey,
-                                                   userSecret: userSecret,
-                                                   challengeIds: challengeIdArr) { response in
-                switch response.result {
-                case .success(let result):
-                    self._handleSuccessResult(result: result,
-                                              onWarning: response.onWarning,
-                                              controller: response.onErrorController,
-                                              resolve: resolve)
-
-                case .failure(let error):
-                    self._handleErrorResult(error: error,
-                                            controller: response.onErrorController,
-                                            reject: reject)
-                }
-
-                self.sdkNavigationController = nil
-            }
-        }
+        reject(nil, "executeWithUserSecret func deprecated", nil)
     }
 
     @objc public func setBiometricsPin(_ userToken: String,
@@ -136,71 +111,81 @@ public class RNWalletSdk: NSObject {
                                        reject: @escaping RCTPromiseRejectBlock) {
 
         DispatchQueue.main.async {
-            WalletSdk.shared.setBiometricsPin(userToken: userToken, encryptionKey: encryptionKey) { response in
-                switch response.result {
-                case .success(let result):
-                    self._handleSuccessResult(result: result,
-                                              onWarning: response.onWarning,
-                                              controller: response.onErrorController,
+            WalletSdk.shared.setBiometricsPin(userToken: userToken, encryptionKey: encryptionKey) { executeCompletion in
+                switch executeCompletion.result {
+                case .success(let executeResult):
+                    self._handleExecuteResult(result: executeResult,
+                                              onWarning: executeCompletion.onWarning,
+                                              controller: executeCompletion.onErrorController,
                                               resolve: resolve)
 
                 case .failure(let error):
                     self._handleErrorResult(error: error,
-                                            controller: response.onErrorController,
+                                            controller: executeCompletion.onErrorController,
                                             reject: reject)
                 }
             }
         }
     }
 
-    private func _handleSuccessResult(result: ExecuteResult,
-                                      onWarning: ExecuteWarning?,
-                                      controller: UIViewController?,
-                                      resolve: @escaping RCTPromiseResolveBlock) {
-        let challengeStatus = result.status.rawValue
-        let challengeType = result.resultType.rawValue
-        var dismiss = false
-        var dict: [String: Any] = [
-            "result": [
-                "status": challengeStatus,
-                "resultType": challengeType,
-                "data": [
-                    "signature": result.data?.signature
-                ]
-            ]
-        ]
-
-        if let onWarning = onWarning {
-            dict["warning"] = [
-                "warningType": onWarning.warningType.rawValue,
-                "warningString": onWarning.warningString
-            ]
-            dismiss = self.sDismissOnCallbackMap[onWarning.warningType.rawValue] == true
+    @objc public func performLogin(provider: String,
+                                   deviceToken: String,
+                                   encryptionKey: String,
+                                   resolve: @escaping RCTPromiseResolveBlock,
+                                   reject: @escaping RCTPromiseRejectBlock) {
+        guard let socialProvider = SocialProvider(rawValue: provider) else {
+            reject(nil, "[unknown format] invalid provider string", nil)
+            return
         }
+        DispatchQueue.main.async {
+            WalletSdk.shared.performLogin(provider: socialProvider,
+                                          deviceToken: deviceToken,
+                                          encryptionKey: encryptionKey) { loginCompletion in
+                switch loginCompletion.result {
+                case .success(let loginResult):
+                    self._handleLoginResult(result: loginResult, resolve: resolve)
 
-        if dismiss {
-            controller?.dismiss(animated: true)
-            resolve(dict)
-
-        } else {
-            EventEmitter.sharedInstance.dispatch(name: "CirclePwOnSuccess", body: dict)
+                case .failure(let error):
+                    reject(String(error.errorCode.rawValue), error.displayString, error)
+                }
+            }
         }
     }
 
-    private func _handleErrorResult(error: ApiError,
-                                    controller: UIViewController?,
+    @objc public func verifyOTP(deviceToken: String,
+                                encryptionKey: String,
+                                otpToken: String,
+                                resolve: @escaping RCTPromiseResolveBlock,
+                                reject: @escaping RCTPromiseRejectBlock) {
+
+        DispatchQueue.main.async {
+            WalletSdk.shared.verifyOTP(deviceToken: deviceToken,
+                                       encryptionKey: encryptionKey,
+                                       otpToken: otpToken) { loginCompletion in
+                switch loginCompletion.result {
+                case .success(let loginResult):
+                    self._handleLoginResult(result: loginResult, resolve: resolve)
+
+                case .failure(let error):
+                    self._handleErrorResult(error: error,
+                                            controller: loginCompletion.onErrorController,
+                                            reject: reject)
+                }
+            }
+        }
+    }
+
+    @objc public func performLogout(provider: String,
+                                    resolve: @escaping RCTPromiseResolveBlock,
                                     reject: @escaping RCTPromiseRejectBlock) {
-
-        if self.sDismissOnCallbackMap[error.errorCode.rawValue] == true {
-            controller?.dismiss(animated: true)
-            reject(String(error.errorCode.rawValue), error.displayString, error)
-
-        } else {
-            let dict: [String: Any] = [
-                "code": String(error.errorCode.rawValue),
-                "message": error.displayString
-            ]
-            EventEmitter.sharedInstance.dispatch(name: "CirclePwOnError", body: dict)
+        guard let socialProvider = SocialProvider(rawValue: provider) else {
+            reject(nil, "[unknown format] invalid provider string", nil)
+            return
+        }
+        DispatchQueue.main.async {
+            WalletSdk.shared.performLogout(provider: socialProvider) { _ in
+                resolve(nil)
+            }
         }
     }
 
@@ -316,5 +301,85 @@ extension RNWalletSdk: WalletSdkLayoutProvider {
 
     public func imageStore() -> ImageStore {
         return ImageStore(local: sLocal, remote: sRemote)
+    }
+}
+
+private extension RNWalletSdk {
+
+    func _handleExecuteResult(result: ExecuteResult,
+                              onWarning: ExecuteWarning?,
+                              controller: UIViewController?,
+                              resolve: @escaping RCTPromiseResolveBlock) {
+        let challengeStatus = result.status.rawValue
+        let challengeType = result.resultType.rawValue
+        var dismiss = false
+        var dict: [String: Any] = [
+            "result": [
+                "status": challengeStatus,
+                "resultType": challengeType,
+                "data": [
+                    "signature": result.data?.signature
+                ]
+            ]
+        ]
+
+        if let onWarning = onWarning {
+            dict["warning"] = [
+                "warningType": onWarning.warningType.rawValue,
+                "warningString": onWarning.warningString
+            ]
+            dismiss = self.sDismissOnCallbackMap[onWarning.warningType.rawValue] == true
+        }
+
+        if dismiss {
+            controller?.dismiss(animated: true)
+            resolve(dict)
+
+        } else {
+            EventEmitter.sharedInstance.dispatch(name: "CirclePwOnSuccess", body: dict)
+        }
+    }
+
+    func _handleLoginResult(result: LoginResult,
+                            resolve: @escaping RCTPromiseResolveBlock) {
+        
+        var oauthInfoDict: [String: Any]?
+        if let oauthInfo = result.oauthInfo {
+            oauthInfoDict = [
+                "provider": oauthInfo.provider,
+                "scope": oauthInfo.scope as Any,
+                "socialUserUUID": oauthInfo.socialUserUUID,
+                "socialUserInfo": [
+                    "name": oauthInfo.socialUserInfo?.name,
+                    "email": oauthInfo.socialUserInfo?.email,
+                    "phone": oauthInfo.socialUserInfo?.phone,
+                ]
+            ]
+        }
+        let dict: [String: Any] = [
+            "userToken": result.userToken,
+            "encryptionKey": result.encryptionKey,
+            "refreshToken": result.refreshToken,
+            "oauthInfo": oauthInfoDict as Any
+        ]
+
+        resolve(dict)
+    }
+
+    func _handleErrorResult(error: ApiError,
+                            controller: UIViewController?,
+                            reject: @escaping RCTPromiseRejectBlock) {
+
+        if self.sDismissOnCallbackMap[error.errorCode.rawValue] == true {
+            controller?.dismiss(animated: true)
+            reject(String(error.errorCode.rawValue), error.displayString, error)
+
+        } else {
+            let dict: [String: Any] = [
+                "code": String(error.errorCode.rawValue),
+                "message": error.displayString
+            ]
+            EventEmitter.sharedInstance.dispatch(name: "CirclePwOnError", body: dict)
+        }
     }
 }

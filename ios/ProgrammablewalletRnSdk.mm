@@ -41,22 +41,37 @@ RCT_EXPORT_METHOD(execute:(NSString *)userToken
     [sdk execute:userToken encryptionKey:encryptionKey challengeIds:challengeIds resolve:resolve reject:reject];
 }
 
-RCT_EXPORT_METHOD(executeWithUserSecret:(NSString *)userToken
-                  encryptionKey:(NSString *)encryptionKey
-                  userSecret:(NSString *)userSecret
-                  challengeIds:(NSArray *)challengeIds
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    [sdk executeWithUserSecret:userToken encryptionKey:encryptionKey userSecret:userSecret challengeIds:challengeIds resolve:resolve reject:reject];
-}
-
 RCT_EXPORT_METHOD(setBiometricsPin:(NSString *)userToken
                   encryptionKey:(NSString *)encryptionKey
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
     [sdk setBiometricsPin:userToken encryptionKey:encryptionKey resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(performLogin:(NSString *)provider
+                  deviceToken:(NSString *)deviceToken
+                  deviceEncryptionKey:(NSString *)deviceEncryptionKey
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [sdk performLoginWithProvider:provider deviceToken:deviceToken encryptionKey:deviceEncryptionKey resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(verifyOTP:(NSString *)otpToken
+                  deviceToken:(NSString *)deviceToken
+                  deviceEncryptionKey:(NSString *)deviceEncryptionKey
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [sdk verifyOTPWithDeviceToken:deviceToken encryptionKey:deviceEncryptionKey otpToken:otpToken resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(performLogout:(NSString *)provider
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [sdk performLogoutWithProvider:provider resolve:resolve reject:reject];
 }
 
 RCT_EXPORT_METHOD(setDismissOnCallbackMap:(NSDictionary *)map)

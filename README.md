@@ -15,7 +15,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 Create a Personal Access Token in your [GitHub setting](https://github.com/settings/tokens). Use `Configure SSO` button next to your created token to authorize `circlefin` organization. More instruction can be found [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Then, log in to `npm` on your terminal.
 
 ```bash
-npm login --scope=@OWNER --registry=https://npm.pkg.github.com
+npm login --scope=@OWNER --registry=https://registry.npmjs.org
 ```
 This will ask you to submit your GitHub personal access token as below.
 Check below links for creating GitHub PAT:
@@ -23,7 +23,7 @@ Check below links for creating GitHub PAT:
 - [Creating a personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
 
 ```properties
-npm notice Log in on https://npm.pkg.github.com/
+npm notice Log in on https://registry.npmjs.org/
 Username: <insert your GitHub username here>
 Password: <insert your GitHub personal access token here>
 ```
@@ -79,7 +79,7 @@ pwsdk.maven.password=<GITHUB_PAT>
 Add below links at tne top of `ios/Podfile`:
 ```ruby
 source 'https://github.com/circlefin/w3s-ios-sdk.git'
-source 'https://cdn.cocoapods.org/'
+source 'https://github.com/CocoaPods/Specs.git'
 
 platform :ios, '13.4'
 ```

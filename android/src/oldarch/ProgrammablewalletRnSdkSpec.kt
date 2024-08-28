@@ -34,17 +34,26 @@ abstract class ProgrammablewalletRnSdkSpec internal constructor(val context: Rea
     challengeIdArr: ReadableArray,
     promise: Promise?
   )
-  abstract fun executeWithUserSecret(
-    userToken: String?,
-    secretKey: String?,
-    userSecret: String?,
-    challengeIdArr: ReadableArray,
-    promise: Promise?
-  )
   abstract fun setBiometricsPin(
     userToken: String?,
     secretKey: String?,
     promise: Promise?
+  )
+  abstract fun performLogin(
+    provider: String,
+    deviceToken: String,
+    deviceEncryptionKey: String,
+    promise: Promise
+  )
+  abstract fun verifyOTP(
+    otpToken: String,
+    deviceToken: String,
+    deviceEncryptionKey: String,
+    promise: Promise
+  )
+  abstract fun performLogout(
+    provider: String,
+    promise: Promise
   )
 
   abstract fun setDismissOnCallbackMap(readableMap: ReadableMap)

@@ -20,6 +20,7 @@ import circle.programmablewallet.sdk.presentation.IconTextConfig
 import circle.programmablewallet.sdk.presentation.LayoutProvider
 import circle.programmablewallet.sdk.presentation.Resource
 import circle.programmablewallet.sdk.presentation.TextConfig
+import com.circlefin.programmablewalletrnsdk.annotation.ExcludeFromGeneratedCCReport
 import java.util.Locale
 
 object RnLayoutProvider : LayoutProvider() {
@@ -27,7 +28,9 @@ object RnLayoutProvider : LayoutProvider() {
   val textConfigMap: MutableMap<String, TextConfig> = HashMap()
   val iconTextsMap: MutableMap<Resource.IconTextsKey, Array<IconTextConfig?>> = HashMap()
   val errorStringMap: MutableMap<Int, String> = HashMap()
+  @ExcludeFromGeneratedCCReport
   var _dateFormat: String? = null
+  @ExcludeFromGeneratedCCReport
   var _debugging = true
   fun setTextConfigsMap(textConfigsMap: Map<String, Array<TextConfig?>>) {
     this.textConfigsMap.clear()

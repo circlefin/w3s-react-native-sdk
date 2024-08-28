@@ -18,6 +18,7 @@ package com.circlefin.programmablewalletrnsdk
 import android.util.Log
 import circle.programmablewallet.sdk.api.ApiError
 import circle.programmablewallet.sdk.api.Callback
+import circle.programmablewallet.sdk.api.Callback2
 import circle.programmablewallet.sdk.api.ExecuteWarning
 import com.circlefin.programmablewalletrnsdk.BridgeHelper.objectToMap
 import com.circlefin.programmablewalletrnsdk.annotation.ExcludeFromGeneratedCCReport
@@ -26,11 +27,10 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
-class PromiseCallback<R> internal constructor(
+class PromiseCallback2<R> internal constructor(
   private val promise: Promise?,
   private val context: ReactApplicationContext
-) : Callback<R> {
-  private var result: R? = null
+) : Callback2<R> {
 
   @ExcludeFromGeneratedCCReport
   override fun onError(error: Throwable): Boolean {
@@ -53,36 +53,13 @@ class PromiseCallback<R> internal constructor(
     return false
   }
 
+  @ExcludeFromGeneratedCCReport
   override fun onResult(result: R) {
     promise ?: return
-    val map = Arguments.createMap()
-    map.putMap("result", objectToMap(result))
-    promise.resolve(map)
-  }
-
-  @ExcludeFromGeneratedCCReport
-  override fun onWarning(warning: ExecuteWarning, result: R?): Boolean {
-    val isDismiss = java.lang.Boolean.TRUE == ProgrammablewalletRnSdkModule.dismissOnCallbackMap[warning.warningType]
-    val map = Arguments.createMap()
-    if (result == null) {
-      map.putMap("result", objectToMap(this.result))
-    } else {
-      this.result = result
-      map.putMap("result", objectToMap(result))
-    }
-    map.putMap("warning", objectToMap(warning))
-    if (isDismiss) {
-      promise?.resolve(map)
-    } else {
-      context.getJSModule(
-        DeviceEventManagerModule.RCTDeviceEventEmitter::class.java
-      )
-        .emit(ProgrammablewalletRnSdkModule.EVENT_NAME_ON_SUCCESS, map)
-    }
-    return !isDismiss
+    promise.resolve(objectToMap(result))
   }
 
   companion object {
-    private val TAG = PromiseCallback::class.java.simpleName
+    private val TAG = PromiseCallback2::class.java.simpleName
   }
 }
