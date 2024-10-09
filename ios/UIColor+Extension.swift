@@ -62,7 +62,7 @@ extension UIColor {
                             argbValue & 0xFF)
         default:
             (a, r, g, b) = (255, 0, 0, 0)
-            assert(false, "Invalid hex code used.")
+            print("Invalid hex code used.")
         }
 
         self.init(red: CGFloat(r) / 255.0,
@@ -76,7 +76,7 @@ extension UIColor {
     /// - Parameter rgba: custom rgba string, ex: "rgba(83,90,110,0.87)"
     convenience init(rgba: String) {
         guard rgba.hasPrefix("rgba(") else {
-            assert(false, "Invalid rgba format used.")
+            fatalError("Invalid rgba format used.")
         }
 
         let arr = rgba.replacingOccurrences(of: "rgba(", with: "")
@@ -88,7 +88,7 @@ extension UIColor {
               let g = Double(arr[1]),
               let b = Double(arr[2]),
               let a = Double(arr[3]) else {
-            assert(false, "Invalid rgba format used.")
+            fatalError("Invalid rgba format used.")
         }
 
         self.init(red: CGFloat(r) / 255.0,
