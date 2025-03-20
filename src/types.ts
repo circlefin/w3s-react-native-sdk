@@ -457,6 +457,7 @@ export enum ExecuteResultType {
   SIGN_TYPEDDATA = 'SIGN_TYPEDDATA',
   INITIALIZE = 'INITIALIZE',
   SET_BIOMETRICS_PIN = 'SET_BIOMETRICS_PIN',
+  WALLET_UPGRADE = 'WALLET_UPGRADE',
 }
 
 export enum InputType {
