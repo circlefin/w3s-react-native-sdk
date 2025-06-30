@@ -42,15 +42,21 @@ class BridgeHelper: NSObject {
 
     static func getImageKey(rnKey: String) -> ImageStore.Img? {
         switch rnKey {
-        case "back": return .naviBack
         case "close": return .naviClose
-        case "securityIntroMain": return .securityIntroMain
-        case "selectCheckMark": return .selectCheckMark
+        case "back": return .naviBack
         case "dropdownArrow": return .dropdownArrow
+        case "selectCheckMark": return .selectCheckMark
         case "errorInfo": return .errorInfo
+        case "securityIntroMain": return .securityIntroMain
         case "securityConfirmMain": return .securityConfirmMain
+        case "biometricsAllowMain": return .biometricsAllowMain
         case "showPin": return .showPin
         case "hidePin": return .hidePin
+        case "transactionTokenIcon": return .transactionTokenIcon
+        case "networkFeeTipIcon": return .networkFeeTipIcon
+        case "showLessDetailArrow": return .showLessDetailArrow
+        case "showMoreDetailArrow": return .showMoreDetailArrow
+        case "requestIcon": return .requestIcon
         default: return nil
         }
     }
