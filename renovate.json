@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>circlefin/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePatterns": [
+        "^react$",
+        "^react-native$",
+        "^@react-native"
+      ],
+      "groupName": "react and react-native core",
+      "groupSlug": "react-core"
+    },
+    {
+      "matchPackagePatterns": [
+        "^@react-navigation"
+      ],
+      "groupName": "react-navigation"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": ["lint", "prettier", "eslint"],
+      "groupName": "linters"
+    }
+  ],
+  "patch": {
+    "minimumReleaseAge": "14 days"
+  },
+  "minor": {
+    "minimumReleaseAge": "14 days"
+  },
+  "major": {
+    "dependencyDashboardApproval": true,
+    "minimumReleaseAge": "28 days"
+  }
+}
