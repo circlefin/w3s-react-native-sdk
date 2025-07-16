@@ -377,15 +377,17 @@ object BridgeHelper {
     val array = arrayOfNulls<SecurityQuestion>(rnArray.size())
     for (i in 0 until rnArray.size()) {
       val readableMap = rnArray.getMap(i)
-      val inputType = safeGetString(readableMap, "inputType")
-      val title = safeGetString(readableMap, "title") ?: ""
-      if (SecurityQuestion.InputType.datePicker.name != inputType) {
-        array[i] = SecurityQuestion(title)
-      } else {
-        array[i] = SecurityQuestion(
-          title,
-          SecurityQuestion.InputType.datePicker
-        )
+      if (readableMap != null) {
+        val inputType = safeGetString(readableMap, "inputType")
+        val title = safeGetString(readableMap, "title") ?: ""
+        if (SecurityQuestion.InputType.datePicker.name != inputType) {
+          array[i] = SecurityQuestion(title)
+        } else {
+          array[i] = SecurityQuestion(
+            title,
+            SecurityQuestion.InputType.datePicker
+          )
+        }
       }
     }
     if (BuildConfig.DEBUG) {
