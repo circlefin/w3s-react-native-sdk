@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "1.1.5",
+  "version": "1.1.7",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -32,7 +32,6 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
-    "release": "release-it",
     "pod-install-new": "RCT_NEW_ARCH_ENABLED=1 bundle exec pod install",
     "publish:sdk": "npm publish --registry https://registry.npmjs.org/"
   },
@@ -62,7 +61,6 @@
     "@evilmartians/lefthook": "^1.5.0",
     "@react-native-community/cli": "^18.0.0",
     "@react-native/eslint-config": "0.79.3",
-    "@release-it/conventional-changelog": "^8.0.1",
     "@types/jest": "^29.5.13",
     "@types/react": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
@@ -79,7 +77,6 @@
     "react": "19.0.0",
     "react-native": "0.79.3",
     "react-native-builder-bob": "^0.20.0",
-    "release-it": "^17.1.1",
     "turbo": "^1.10.7",
     "typedoc": "^0.25.4",
     "typescript": "^5.0.4"
@@ -102,23 +99,6 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": "angular"
-      }
-    }
   },
   "eslintConfig": {
     "root": true,
