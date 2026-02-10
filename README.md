@@ -12,7 +12,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 
 ## Authenticate the npm registry
 
-Create a Personal Access Token in your [GitHub setting](https://github.com/settings/tokens). Use `Configure SSO` button next to your created token to authorize `circlefin` organization. More instruction can be found [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Then, log in to `npm` on your terminal.
+Create a Personal Access Token in your [GitHub setting](https://github.com/settings/tokens). Use `Configure SSO` button next to your created token to authorize `crcl-main` organization. More instruction can be found [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Then, log in to `npm` on your terminal.
 
 ```bash
 npm login --scope=@OWNER --registry=https://registry.npmjs.org
