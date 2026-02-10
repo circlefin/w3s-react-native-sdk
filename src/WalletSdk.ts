@@ -98,10 +98,6 @@ export const WalletSdk = ((): IWalletSdk => {
       emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
       WalletSdkModule.execute(userToken, encryptionKey, challengeIds)
         .then((successResult: SuccessResult) => {
-          console.debug('[WalletSdk] Execute result', {
-            resultType: successResult.result?.resultType,
-            status: successResult.result?.status,
-          })
           successCallback(successResult)
         })
         .catch((e: Error) => {
