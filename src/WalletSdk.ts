@@ -1,259 +1,397 @@
-// Copyright (c) 2024, Circle Internet Financial, LTD. All rights reserved.
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import WalletSdkModule from './ProgrammablewalletRnSdkModule'
+/**
+ * Copyright 2025 Circle Internet Group, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 import {
-  DeviceEventEmitter,
-  Image,
-  NativeEventEmitter,
-  NativeModules,
-  Platform,
-} from 'react-native'
-import type { ImageSourcePropType } from 'react-native/Libraries/Image/Image'
-import {
-  type Configuration,
-  type ErrorCode,
-  type EventListener,
-  type IconTextConfig,
-  type IconTextsKey,
-  type ImageKey,
-  type IWalletSdk,
-  type SecurityQuestion,
-  type SuccessResult,
-  type TextConfig,
-  type TextKey,
-  type TextsKey,
-  type ErrorCallback,
-  type SuccessCallback,
-  type Error,
+  IWalletSdk,
+  Configuration,
+  TextsKey,
+  IconTextsKey,
+  TextKey,
+  ImageKey,
   DateFormat,
+  ErrorCode,
+  SuccessCallback,
+  LoginSuccessCallback,
+  CompletedCallback,
+  ErrorCallback,
+  SuccessResult,
+  LoginResult,
+  IconTextConfig,
+  TextConfig,
   SocialProvider,
-  type LoginSuccessCallback,
-  type CompleteCallback,
-  type LoginResult,
+  SecurityQuestion,
+  InputType,
 } from './types'
-import packageJson from '../package.json'
+import { bridgeSafe } from './bridgeSafe'
+const packageJson = require('../package.json')
 
-const { ReactNativeEventEmitter } = NativeModules
+import ProgrammablewalletRnSdk from './ProgrammablewalletRnSdkModule'
+import { ImageSourcePropType, Image } from 'react-native'
 
-if (!WalletSdkModule) {
-  throw new Error(`NativeModule: ProgrammablewalletRnSdkModule is null.`)
-}
-const emitter =
-  Platform.OS === 'ios'
-    ? new NativeEventEmitter(ReactNativeEventEmitter)
-    : DeviceEventEmitter
-const EVENT_NAME_ON_EVENT = 'CirclePwOnEvent'
+// SDK event identifiers
 const EVENT_NAME_ON_SUCCESS = 'CirclePwOnSuccess'
 const EVENT_NAME_ON_ERROR = 'CirclePwOnError'
 const USER_AGENT_RN = 'Circle-Programmable-Wallet-SDK-RN'
 
+/**
+ * Resolves React Native image sources to URI strings for native bridge
+ * @param source - React Native image source
+ * @returns Resolved URI string or null
+ */
+function getImageUrl(source: ImageSourcePropType): string | null {
+  if (!source) {
+    return null
+  }
+  const resolved = Image.resolveAssetSource(source)
+  if (
+    !resolved ||
+    typeof resolved.uri !== 'string' ||
+    resolved.uri.trim() === ''
+  ) {
+    return null
+  }
+  return resolved.uri
+}
+
+// Import security question utility functions
+import { toPlainSecurityQuestion } from './utils/securityQuestionUtils'
+
 export const WalletSdk = ((): IWalletSdk => {
-  const constants = WalletSdkModule.getConstants()
   const defaultUserAgentRn = USER_AGENT_RN + '/' + packageJson.version
   return {
     sdkVersion: {
-      native: constants.sdkVersion,
+      native: ProgrammablewalletRnSdk.sdkVersion,
       rn: packageJson.version,
     },
-    deviceId: Platform.OS === 'ios' ? constants.deviceId : (WalletSdkModule.getDeviceId() ?? constants.deviceId),
+    get deviceId() {
+      return ProgrammablewalletRnSdk.getDeviceId()
+    },
+    getDeviceId: ProgrammablewalletRnSdk.getDeviceId,
     init(configuration: Configuration): Promise<void> {
-      const promise = WalletSdkModule.initSdk(configuration)
-      WalletSdkModule.setCustomUserAgent(defaultUserAgentRn)
+      const promise = ProgrammablewalletRnSdk.initSdk(configuration)
+      ProgrammablewalletRnSdk.setCustomUserAgent(defaultUserAgentRn)
       return promise
     },
-    setSecurityQuestions(securityQuestions: SecurityQuestion[]): void {
-      WalletSdkModule.setSecurityQuestions(securityQuestions)
-    },
-    addListener(listener: EventListener): void {
-      emitter.addListener(EVENT_NAME_ON_EVENT, listener)
-    },
-    removeAllListeners(): void {
-      emitter.removeAllListeners(EVENT_NAME_ON_EVENT)
-    },
-    getDeviceId(): string {
-      return Platform.OS === 'ios' ? constants.deviceId : (WalletSdkModule.getDeviceId() ?? constants.deviceId)
+    setSecurityQuestions(securityQuestions: Array<{ title: string; inputType?: InputType | string | number }>): void {
+      try {
+        // Convert each input to a proper SecurityQuestion object
+        const normalized: SecurityQuestion[] = (securityQuestions || []).map(q => toPlainSecurityQuestion(q))
+
+        // toPlainSecurityQuestion already performs the necessary serialization
+        // No need for bridgeSafe here as each question has been converted to a plain object
+        // with only primitive properties (string title and enum inputType)
+        ProgrammablewalletRnSdk.setSecurityQuestions(normalized)
+      } catch (e) {
+        console.error('setSecurityQuestions failed:', e)
+      }
     },
     execute(
       userToken: string,
       encryptionKey: string,
       challengeIds: string[],
       successCallback: SuccessCallback,
-      errorCallback: ErrorCallback
+      errorCallback: ErrorCallback,
     ): void {
-      emitter.addListener(EVENT_NAME_ON_SUCCESS, successCallback)
-      emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
-      WalletSdkModule.execute(userToken, encryptionKey, challengeIds)
+      const successListener = ProgrammablewalletRnSdk.addListener(
+        EVENT_NAME_ON_SUCCESS,
+        (event: unknown) => {
+          console.debug('[WalletSdk] Execute result')
+          successCallback(event as SuccessResult)
+          cleanup()
+        },
+      )
+
+      const errorListener = ProgrammablewalletRnSdk.addListener(
+        EVENT_NAME_ON_ERROR,
+        (event: unknown) => {
+          console.debug('[WalletSdk] Error event received:', event)
+          // Convert event to Error object if needed
+          const error =
+            event instanceof Error
+              ? event
+              : new Error((event as { message?: string })?.message || 'Unknown error')
+          errorCallback(error)
+          cleanup()
+        },
+      )
+
+      // Cleanup function to remove listeners
+      const cleanup = () => {
+        successListener?.remove()
+        errorListener?.remove()
+      }
+
+      // Call native execute method
+      ProgrammablewalletRnSdk.execute(userToken, encryptionKey, challengeIds)
         .then((successResult: SuccessResult) => {
-          console.debug('[WalletSdk] Execute result', {
-            resultType: successResult.result?.resultType,
-            status: successResult.result?.status,
-          })
+          // If Promise resolves but no event was fired, call success callback
+          console.debug('[WalletSdk] Promise resolved')
           successCallback(successResult)
+          cleanup()
+        })
+        .catch((e: Error) => {
+          // If Promise rejects but no event was fired, call error callback
+          console.debug('[WalletSdk] Promise rejected:', e)
+          errorCallback(e)
+          cleanup()
+        })
+    },
+    verifyOTP(
+      otpToken: string,
+      deviceToken: string,
+      deviceEncryptionKey: string,
+      successCallback: LoginSuccessCallback,
+      errorCallback: ErrorCallback,
+    ): void {
+      ProgrammablewalletRnSdk.addListener(EVENT_NAME_ON_ERROR, (event: unknown) => {
+        // Convert event to Error object if needed
+        const error =
+          event instanceof Error
+            ? event
+            : new Error((event as { message?: string })?.message || 'Unknown error')
+        errorCallback(error)
+      })
+      ProgrammablewalletRnSdk.verifyOTP(
+        otpToken,
+        deviceToken,
+        deviceEncryptionKey,
+      )
+        .then((result: LoginResult) => {
+          successCallback(result)
         })
         .catch((e: Error) => {
           errorCallback(e)
         })
         .finally(() => {
-          emitter.removeAllListeners(EVENT_NAME_ON_SUCCESS)
-          emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
+          ProgrammablewalletRnSdk.removeAllListeners(EVENT_NAME_ON_ERROR)
+        })
+    },
+    performLogin(
+      provider: SocialProvider,
+      deviceToken: string,
+      deviceEncryptionKey: string,
+      successCallback: LoginSuccessCallback,
+      errorCallback: ErrorCallback,
+    ): void {
+      ProgrammablewalletRnSdk.performLogin(
+        provider,
+        deviceToken,
+        deviceEncryptionKey,
+      )
+        .then((successResult: LoginResult) => {
+          console.debug(
+            '[WalletSdk] performLogin Promise resolved:',
+            successResult,
+          )
+          successCallback(successResult)
+        })
+        .catch((e: Error) => {
+          console.debug('[WalletSdk] performLogin Promise rejected:', e)
+          errorCallback(e)
+        })
+    },
+    performLogout(
+      provider: SocialProvider,
+      completedCallback: CompletedCallback,
+      errorCallback: ErrorCallback,
+    ): void {
+      ProgrammablewalletRnSdk.performLogout(provider)
+        .then(() => {
+          console.debug('[WalletSdk] performLogout Promise resolved')
+          completedCallback()
+        })
+        .catch((e: Error) => {
+          console.debug('[WalletSdk] performLogout Promise rejected:', e)
+          errorCallback(e)
         })
     },
     setBiometricsPin(
       userToken: string,
       encryptionKey: string,
       successCallback: SuccessCallback,
-      errorCallback: ErrorCallback
+      errorCallback: ErrorCallback,
     ): void {
-      emitter.addListener(EVENT_NAME_ON_SUCCESS, successCallback)
-      emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
-      WalletSdkModule.setBiometricsPin(userToken, encryptionKey)
+      const successListener = ProgrammablewalletRnSdk.addListener(
+        EVENT_NAME_ON_SUCCESS,
+        (event: unknown) => {
+          successCallback(event as SuccessResult)
+          cleanup()
+        },
+      )
+
+      const errorListener = ProgrammablewalletRnSdk.addListener(
+        EVENT_NAME_ON_ERROR,
+        (event: unknown) => {
+          console.debug(
+            '[WalletSdk] setBiometricsPin Error event received:',
+            event,
+          )
+          // Convert event to Error object if needed
+          const error =
+            event instanceof Error
+              ? event
+              : new Error((event as { message?: string })?.message || 'Unknown error')
+          errorCallback(error)
+          cleanup()
+        },
+      )
+
+      // Cleanup function to remove listeners
+      const cleanup = () => {
+        successListener?.remove()
+        errorListener?.remove()
+      }
+
+      // Call native setBiometricsPin method
+      ProgrammablewalletRnSdk.setBiometricsPin(userToken, encryptionKey)
         .then((successResult: SuccessResult) => {
+          // If Promise resolves but no event was fired, call success callback
+          console.debug(
+            '[WalletSdk] setBiometricsPin Promise resolved:',
+            successResult,
+          )
           successCallback(successResult)
+          cleanup()
         })
         .catch((e: Error) => {
+          // If Promise rejects but no event was fired, call error callback
+          console.debug('[WalletSdk] setBiometricsPin Promise rejected:', e)
           errorCallback(e)
-        })
-        .finally(() => {
-          emitter.removeAllListeners(EVENT_NAME_ON_SUCCESS)
-          emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
+          cleanup()
         })
     },
-    performLogin(provider: SocialProvider, deviceToken: string, deviceEncryptionKey: string, successCallback: LoginSuccessCallback, errorCallback: ErrorCallback): void {
-      WalletSdkModule.performLogin(provider, deviceToken, deviceEncryptionKey)
-        .then((result: LoginResult) => {
-          successCallback(result)
-        })
-        .catch((e: Error) => {
-          errorCallback(e)
-        })
-    },
-    verifyOTP(otpToken: string, deviceToken: string, deviceEncryptionKey: string, successCallback: LoginSuccessCallback, errorCallback: ErrorCallback): void {
-      emitter.addListener(EVENT_NAME_ON_ERROR, errorCallback)
-      WalletSdkModule.verifyOTP(otpToken, deviceToken, deviceEncryptionKey)
-        .then((result: LoginResult) => {
-          successCallback(result)
-        })
-        .catch((e: Error) => {
-          errorCallback(e)
-        })
-        .finally(() => {
-          emitter.removeAllListeners(EVENT_NAME_ON_ERROR)
-        })
-    },
-    performLogout(provider: SocialProvider, completeCallback: CompleteCallback, errorCallback: ErrorCallback): void {
-      WalletSdkModule.performLogout(provider)
-        .then(() => {
-          completeCallback()
-        })
-        .catch((e: Error) => {
-          errorCallback(e)
-        })
-    },
+
     setDismissOnCallbackMap(map: Map<ErrorCode, boolean>): void {
       try {
-        WalletSdkModule.setDismissOnCallbackMap(Object.fromEntries(map))
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(map) as Record<string, boolean>
+        ProgrammablewalletRnSdk.setDismissOnCallbackMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setDismissOnCallbackMap failed:', e)
       }
     },
     moveTaskToFront(): void {
-      WalletSdkModule.moveTaskToFront()
+      try {
+        ProgrammablewalletRnSdk.moveTaskToFront()
+      } catch (e) {
+        console.error('moveTaskToFront failed:', e)
+      }
     },
     moveRnTaskToFront(): void {
-      WalletSdkModule.moveRnTaskToFront()
+      try {
+        ProgrammablewalletRnSdk.moveRnTaskToFront()
+      } catch (e) {
+        console.error('moveRnTaskToFront failed:', e)
+      }
     },
     setTextConfigsMap(map: Map<TextsKey, TextConfig[]>): void {
       try {
-        WalletSdkModule.setTextConfigsMap(Object.fromEntries(map))
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(map) as Record<string, TextConfig[]>
+        ProgrammablewalletRnSdk.setTextConfigsMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setTextConfigsMap failed:', e)
       }
     },
+
     setIconTextConfigsMap(
-      rawMap: Map<IconTextsKey, Array<IconTextConfig>>
+      rawMap: Map<IconTextsKey, Array<IconTextConfig>>,
     ): void {
       try {
-        const map = {}
-        for (const [key, configs] of rawMap) {
-          const newConfigs = []
-          for (const config of configs) {
-            const url = getImageUrl(config.image)
-            newConfigs.push({ image: url, textConfig: config.textConfig })
-          }
-          // @ts-ignore
-          map[key] = newConfigs
-        }
-        WalletSdkModule.setIconTextConfigsMap(map)
+        // Create a transformed plain object instead of a Map
+        const processedObj: Record<string, Array<{ image: string | null; textConfig: TextConfig }>> = {}
+
+        Array.from(rawMap.entries()).forEach(([key, configs]) => {
+          const processedConfigs = configs.map(config => {
+            const { image, textConfig = {} } = config as IconTextConfig
+            // Process image URL, as this is React Native specific logic
+            return {
+              image: image ? getImageUrl(image) : null,
+              textConfig,
+            }
+          })
+          processedObj[String(key)] = processedConfigs
+        })
+
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(processedObj) as Record<string, unknown>
+        ProgrammablewalletRnSdk.setIconTextConfigsMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setIconTextConfigsMap Error:', e)
       }
     },
     setTextConfigMap(map: Map<TextKey, TextConfig>): void {
       try {
-        WalletSdkModule.setTextConfigMap(Object.fromEntries(map))
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(map) as Record<string, TextConfig>
+        ProgrammablewalletRnSdk.setTextConfigMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setTextConfigMap failed:', e)
       }
     },
-    setImageMap(rawMap: Map<ImageKey, ImageSourcePropType>): void {
+
+    setImageMap(map: Map<ImageKey, ImageSourcePropType>): void {
       try {
-        const map = {}
-        for (const [key, value] of rawMap) {
-          // @ts-ignore
+        // Process image URLs, this part needs to be preserved
+        const processedMap = new Map<ImageKey, string>()
+
+        map.forEach((value, key) => {
           const url = getImageUrl(value)
-          if (url == null) {
-            continue
+          // Only keep non-null URLs
+          if (url !== null) {
+            processedMap.set(key, url)
           }
-          // @ts-ignore
-          map[key] = url
-        }
-        WalletSdkModule.setImageMap(map)
+        })
+
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(processedMap) as Record<string, string>
+        ProgrammablewalletRnSdk.setImageMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setImageMap failed:', e)
       }
     },
     setDateFormat(format: DateFormat): void {
-      WalletSdkModule.setDateFormat(format)
+      try {
+        ProgrammablewalletRnSdk.setDateFormat(format)
+      } catch (e) {
+        console.error('setDateFormat failed:', e)
+      }
     },
     setDebugging(debugging: boolean): void {
-      WalletSdkModule.setDebugging(debugging)
+      try {
+        ProgrammablewalletRnSdk.setDebugging(debugging)
+      } catch (e) {
+        console.error('setDebugging failed:', e)
+      }
     },
     setCustomUserAgent(userAgent: string): void {
-      WalletSdkModule.setCustomUserAgent(defaultUserAgentRn + ' | ' + userAgent)
+      ProgrammablewalletRnSdk.setCustomUserAgent(
+        defaultUserAgentRn + ' | ' + userAgent,
+      )
     },
     setErrorStringMap(map: Map<ErrorCode, string>): void {
       try {
-        WalletSdkModule.setErrorStringMap(Object.fromEntries(map))
+        // Use bridgeSafe for serialization and ensure the result is a non-null object
+        const serialized = bridgeSafe(map) as Record<string, string>
+        ProgrammablewalletRnSdk.setErrorStringMap(serialized)
       } catch (e) {
-        console.error(e)
+        console.error('setErrorStringMap failed:', e)
       }
-    }
+    },
   }
 })()
-
-function getImageUrl(source: ImageSourcePropType): string | null {
-  if (!source) {
-    return null
-  }
-  // @ts-ignore
-  const resolved = Image.resolveAssetSource(source)
-  if (!resolved || !resolved.uri) {
-    return null
-  }
-  // @ts-ignore
-  return resolved.uri
-}
