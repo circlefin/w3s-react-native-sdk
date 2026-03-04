@@ -1,112 +1,225 @@
-# @circle-fin/w3s-pw-react-native-sdk
-React Native SDK for Circle Programmable Wallet
-## Install NVM
+# Circle User-Controlled Wallets React Native SDK
 
-Install Node Version Manager to use different versions of node and npm easily.
+> SDK for integrating Circle's user-controlled wallet into React Native applications
 
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-```
+> [!IMPORTANT]
+> This SDK supports both Expo and bare React Native projects. Select the appropriate guide based on your project type.
+>
+> - **Bare React Native** (manages native code manually) → Go to [Bare React Native Integration Guide](./BARE_REACT_NATIVE_GUIDE.md)
+> - **Expo project** (uses `expo prebuild` and has `app.json`/`app.config.js`) ↓ Continue below
 
-> **Note:** See [nvm repo](https://github.com/nvm-sh/nvm) for the most updated instruction.
+---
 
-## Authenticate the npm registry
+## Migrating from SDK v1 (Bare React Native)
 
-Create a Personal Access Token in your [GitHub setting](https://github.com/settings/tokens). Use `Configure SSO` button next to your created token to authorize `circlefin` organization. More instruction can be found [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Then, log in to `npm` on your terminal.
+If you have an existing bare React Native project using SDK v1 and want to upgrade to SDK v2, see the [SDK v1 Migration Guide](https://github.com/circlefin/w3s-react-native-sample-app-wallets/blob/master/MIGRATION_GUIDE.md).
 
-```bash
-npm login --scope=@OWNER --registry=https://registry.npmjs.org
-```
-This will ask you to submit your GitHub personal access token as below.
-Check below links for creating GitHub PAT:
-- [Creating a fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token)
-- [Creating a personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
+You can also find the SDK v1 sample app in the sample app repository's [sdk-v1 branch](https://github.com/circlefin/w3s-react-native-sample-app-wallets/tree/sdk-v1).
 
-```properties
-npm notice Log in on https://registry.npmjs.org/
-Username: <insert your GitHub username here>
-Password: <insert your GitHub personal access token here>
-```
-## [Enable the New Architecture]((https://reactnative.dev/docs/new-architecture-app-intro#android---enable-the-new-architecture) )
-The SDK is supporting both React Native old and [new architectures](https://reactnative.dev/docs/the-new-architecture/landing-page).
-You can enable the new architecture by changing the project setting.
-### Android
-Update the `android/gradle.properties` file as follows:
-```properties
-newArchEnabled=true
-```
-### iOS
-Reinstall your pods by running pod install with the right flag:
-```shell
-RCT_NEW_ARCH_ENABLED=1 bundle exec pod install
-```
+## System Requirements
+
+| Platform     | Minimum Version | Recommended Version |
+| ------------ | --------------- | ------------------- |
+| React Native | 0.60+           | 0.76-0.81           |
+| iOS          | 15.1+           | iOS 17+             |
+| Android      | API 21+         | API 33+             |
+| Expo SDK     | 49+             | 53+                 |
+
 ## Installation
-### Using yarn
-```shell
-yarn add @circle-fin/w3s-pw-react-native-sdk
-```
-### Using npm
-```shell
-npm install @circle-fin/w3s-pw-react-native-sdk
-```
-## Link Native Dependencies
-### Android
-Add the maven repository to your `android/build.gradle`. It's suggested that load settings from `local.properties`:
-```properties
-repositories {
-	...
-	maven {
-        	Properties properties = new Properties()
-		// Load local.properties.
-        	properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
 
-		url properties.getProperty('pwsdk.maven.url')
-		credentials {
-        		username properties.getProperty('pwsdk.maven.username')
-        		password properties.getProperty('pwsdk.maven.password')
-		}
-	}
+> [!IMPORTANT]
+> **Prerequisites**: This SDK uses native modules and requires a [development build](https://docs.expo.dev/develop/development-builds/introduction). Expo Go is not supported.
+
+Follow these steps in order. The SDK will be fully configured after running `expo prebuild`.
+
+#### Step 1: Generate Native Projects (Skip if `android`/`ios` Already Exist)
+
+If you don't have `android/` and `ios/` directories yet, generate them:
+
+```shell
+npx expo prebuild
+```
+
+#### Step 2: Install the SDK Package
+
+```shell
+npx expo install @circle-fin/w3s-pw-react-native-sdk
+```
+
+#### Step 3: Configure app.json
+
+Add both required plugins to `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "@circle-fin/w3s-pw-react-native-sdk/plugins/withCopyFiles",
+        {
+          "sourceDir": "prebuild-sync-src",
+          "targetDir": ".",
+          "overwrite": true
+        }
+      ],
+      "@circle-fin/w3s-pw-react-native-sdk/plugins/podfile-modifier"
+    ]
+  }
 }
 ```
-Add the maven setting values in `local.properties` file.
-```properties
-pwsdk.maven.url=https://maven.pkg.github.com/circlefin/w3s-android-sdk
-pwsdk.maven.username=<GITHUB_USERNAME>
-# Fine-grained personal access tokens or classic with package write permission.
-pwsdk.maven.password=<GITHUB_PAT>
-```
-### iOS
-Add below links at tne top of `ios/Podfile`:
-```ruby
-source 'https://github.com/circlefin/w3s-ios-sdk.git'
-source 'https://github.com/CocoaPods/Specs.git'
 
-platform :ios, '13.4'
+**What these plugins do:**
+
+- `withCopyFiles`: Preserves your Android/iOS configurations across rebuilds
+- `podfile-modifier`: Automatically configures iOS Podfile for Circle SDK
+
+> [!TIP]
+> Prefer manual setup? Skip `podfile-modifier` and follow the [iOS configuration](./BARE_REACT_NATIVE_GUIDE.md#step-3-configure-ios) in the **Bare React Native Integration Guide** after prebuild.
+
+<details>
+<summary><strong>Learn more about withCopyFiles plugin</strong></summary>
+
+The `withCopyFiles` plugin copies files from a source directory to your native project during prebuild, ensuring custom configurations are preserved.
+
+**Directory structure example:**
+
 ```
-Declare dynamic link as below:
-```ruby
-target 'W3sSampleWallet' do
-  use_frameworks!
-end
+prebuild-sync-src/
+├── android/
+│   └── build.gradle
+└── ios/
+    └── YourApp/Resources/
+        ├── CirclePWLocalizable.strings
+        └── CirclePWTheme.json
 ```
-And add the following `post_install` hook:
-```ruby
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings["ONLY_ACTIVE_ARCH"] = "NO"
-      config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-    end
-  end
-end
-```
-## Run the Example
-### Android
+
+During `expo prebuild`, files from `prebuild-sync-src/android` → `android/` and `prebuild-sync-src/ios` → `ios/`.
+
+**Options:**
+
+| Option      | Default             | Description                                   |
+| ----------- | ------------------- | --------------------------------------------- |
+| `sourceDir` | `prebuild-sync-src` | Root directory with android/ and ios/ folders |
+| `overwrite` | `true`              | Whether to overwrite existing files           |
+
+**Note:** This solves the problem of `expo prebuild --clean` erasing manual changes.
+
+</details>
+
+#### Step 4: Configure Android Repository
+
+> [!NOTE]
+> The SDK depends on `w3s-android-sdk` hosted on GitHub Gradle registry, which requires authentication.
+
+**4.1** Create `.env` in project root with your GitHub credentials:
+
 ```bash
-yarn example android
+PWSDK_MAVEN_URL=https://maven.pkg.github.com/circlefin/w3s-android-sdk
+PWSDK_MAVEN_USERNAME=<YOUR_GITHUB_USERNAME>
+PWSDK_MAVEN_PASSWORD=<YOUR_GITHUB_PAT>
 ```
-### iOS
-```bash
-yarn example ios
+
+Get a [Personal Access Token](https://github.com/settings/tokens) with `read:packages` permission.
+
+**4.2** Add to `android/build.gradle` (project-level) in the `repositories` block:
+
+```gradle
+repositories {
+  // Keep your other repositories here
+  // google()
+  // mavenCentral()
+
+  maven {
+    url System.getenv('PWSDK_MAVEN_URL')
+    credentials {
+      username System.getenv('PWSDK_MAVEN_USERNAME')
+      password System.getenv('PWSDK_MAVEN_PASSWORD')
+    }
+  }
+}
 ```
+
+#### Step 5: Create Sync Directory Structure
+
+Create `prebuild-sync-src/` folder and copy your modified Android files:
+
+```shell
+mkdir -p prebuild-sync-src/android
+cp android/build.gradle prebuild-sync-src/android/
+```
+
+> [!IMPORTANT]
+> Place all manual Android/iOS changes in `prebuild-sync-src/` to preserve them across rebuilds.
+
+#### Step 6: Generate Native Code
+
+```shell
+npx expo prebuild --clean
+```
+
+This command generates native directories and applies all configurations automatically.
+
+> [!TIP]
+> **Verify iOS Configuration:** Check if the Circle SDK repository was added correctly:
+>
+> ```shell
+> cat ios/Podfile | grep "circlefin"
+> ```
+>
+> Expected output: `source 'https://github.com/circlefin/w3s-ios-sdk.git'`
+
+#### Step 7: Install iOS Dependencies
+
+```shell
+cd ios && pod install && cd ..
+```
+
+#### Step 8: Build and Run
+
+**Local development:**
+
+For iOS:
+
+```shell
+npx expo run:ios
+```
+
+For Android:
+
+```shell
+npx expo run:android
+```
+
+**EAS Build:**
+
+First, install EAS CLI globally (one-time setup):
+
+```shell
+npm install -g eas-cli
+```
+
+Then build your app:
+
+```shell
+eas build --profile development --platform all
+```
+
+> [!TIP]
+> **EAS Setup**: Add secrets `PWSDK_MAVEN_USERNAME` and `PWSDK_MAVEN_PASSWORD` to your EAS project. [Learn more](https://docs.expo.dev/build-reference/variables/)
+
+---
+
+## Additional Resources
+
+**Circle Resources:**
+
+- [User-Controlled Wallets Documentation](https://developers.circle.com/wallets/user-controlled) - Product overview and architecture
+- [React Native SDK Documentation](https://developers.circle.com/wallets/user-controlled/react-native-sdk) - Complete API reference
+- [UI Customization API](https://developers.circle.com/wallets/user-controlled/react-native-sdk-ui-customization-api) - Theming and localization options
+- [React Native Sample App](https://github.com/circlefin/w3s-react-native-sample-app-wallets) - Working Expo sample app with integration guide
+- [SDK v1 Migration Guide](https://github.com/circlefin/w3s-react-native-sample-app-wallets/blob/master/MIGRATION_GUIDE.md) - Complete guide for upgrading from bare React Native + SDK v1 to Expo Modules + SDK v2
+
+**Expo Resources:**
+
+- [Expo Development Build](https://docs.expo.dev/development/build/)
+- [EAS Build](https://docs.expo.dev/build/introduction/)
