@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-import Foundation
+import UIKit
 
-extension Array {
+extension UITextField {
 
-    subscript(safe index: Int) -> Element? {
-        guard indices.contains(index) else {
-            return nil
-        }
-        return self[index]
+    func placeholderColor(color: UIColor) {
+        guard let placeholder = self.placeholder, let font = self.font else { return }
+        let attributeString = [
+            .foregroundColor: color,
+            .font: font,
+        ] as [NSAttributedString.Key: Any]
+        self.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: attributeString)
     }
 }

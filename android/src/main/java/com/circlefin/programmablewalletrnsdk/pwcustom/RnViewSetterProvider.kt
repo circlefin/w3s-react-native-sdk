@@ -1,77 +1,107 @@
-// Copyright (c) 2024, Circle Internet Financial, LTD. All rights reserved.
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/**
+ * Copyright 2025 Circle Internet Group, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.circlefin.programmablewalletrnsdk.pwcustom
 
-import android.graphics.drawable.Drawable
-import androidx.appcompat.widget.Toolbar
+import android.content.Context
+import android.util.Log
 import circle.programmablewallet.sdk.presentation.IImageViewSetter
 import circle.programmablewallet.sdk.presentation.IToolbarSetter
+import circle.programmablewallet.sdk.presentation.LocalToolbarImageSetter
+import circle.programmablewallet.sdk.presentation.RemoteToolbarImageSetter
 import circle.programmablewallet.sdk.presentation.Resource
 import circle.programmablewallet.sdk.presentation.ViewSetterProvider
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
-import com.circlefin.programmablewalletrnsdk.TestHelper
 
+/**
+ * Custom ViewSetterProvider for React Native SDK image customization.
+ * This is the correct way to implement image customization in Circle SDK.
+ *
+ * Handles both regular icons and toolbar icons (back, close buttons).
+ */
 object RnViewSetterProvider : ViewSetterProvider() {
-  val map: MutableMap<String, String> = HashMap()
-  fun setMap(map: Map<String, String>) {
-    this.map.clear()
-    this.map.putAll(map)
-  }
 
-  override fun getImageSetter(icon: Resource.Icon): IImageViewSetter {
-    val key = String.format("%s", icon.name)
-    val value = map[key]
-    return RnImageSetter(value)
-  }
+    // Store image mappings for different icons
+    private val imageMap: MutableMap<String, String> = HashMap()
+    // Store context for resource lookups
+    private var context: Context? = null
 
-  override fun getToolbarImageSetter(toolbarIcon: Resource.ToolbarIcon): IToolbarSetter {
-    return object : IToolbarSetter {
-      override fun apply(toolbar: Toolbar?) {
-        try {
-          if (toolbar == null) {
-            return
-          }
-          val context = toolbar.context
-          val key = String.format("%s", toolbarIcon.name)
-          val value = map[key] ?: return
-          if (value.startsWith("http")) {
-            Glide.with(context).asDrawable().load(value)
-              .into(object : CustomTarget<Drawable?>() {
-                override fun onResourceReady(
-                  resource: Drawable,
-                  transition: Transition<in Drawable?>?
-                ) {
-                  toolbar.navigationIcon = resource
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-              })
-            TestHelper.addTagForTest(toolbar, value)
-          } else {
-            val resourceId =
-              context.resources.getIdentifier(value, "drawable", context.packageName)
-            toolbar.setNavigationIcon(resourceId)
-            TestHelper.addTagForTest(toolbar, "$resourceId")
-          }
-        } catch (e: Exception) {
-          e.printStackTrace()
+    /**
+     * Set custom image mappings.
+     * @param map Map of icon names to image URLs/paths
+     * @param context Android context for resource lookups
+     */
+    fun setImageMap(map: Map<String, String>, context: Context? = null) {
+        imageMap.clear()
+        imageMap.putAll(map)
+        if (context != null) {
+            this.context = context
         }
-      }
     }
-  }
+
+    /**
+     * Return custom IImageViewSetter for the given icon type.
+     * This is called by the SDK when it needs to set an image.
+     */
+    override fun getImageSetter(type: Resource.Icon): IImageViewSetter? {
+        val imageUrl = imageMap[type.name]
+        return if (imageUrl != null) {
+            // Use our custom RnImageSetter for both remote and local images
+            RnImageSetter(imageUrl)
+        } else {
+            // Fallback to default behavior
+            super.getImageSetter(type)
+        }
+    }
+
+    /**
+     * Return custom IToolbarSetter for toolbar icons (back, close).
+     * This handles navigation buttons in the toolbar.
+     */
+    override fun getToolbarImageSetter(type: Resource.ToolbarIcon): IToolbarSetter? {
+        val imageUrl = imageMap[type.name]
+        return if (imageUrl != null) {
+            if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {
+                // Remote image or data URI - use RemoteToolbarImageSetter
+                RemoteToolbarImageSetter(0, imageUrl)
+            } else {
+                // Local drawable resource name - use LocalToolbarImageSetter
+                val ctx = context
+                if (ctx != null) {
+                    try {
+                        val resourceId = ctx.resources.getIdentifier(imageUrl, "drawable", ctx.packageName)
+                        if (resourceId != 0) {
+                            LocalToolbarImageSetter(resourceId)
+                        } else {
+                            Log.w("RnViewSetterProvider", "Could not find drawable resource: $imageUrl, falling back to RemoteToolbarImageSetter")
+                            RemoteToolbarImageSetter(0, imageUrl)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("RnViewSetterProvider", "Failed to create LocalToolbarImageSetter for: $imageUrl", e)
+                        RemoteToolbarImageSetter(0, imageUrl)
+                    }
+                } else {
+                    Log.w("RnViewSetterProvider", "No context available for local resource: $imageUrl, using RemoteToolbarImageSetter")
+                    RemoteToolbarImageSetter(0, imageUrl)
+                }
+            }
+        } else {
+            // Fallback to default behavior
+            super.getToolbarImageSetter(type)
+        }
+    }
 }

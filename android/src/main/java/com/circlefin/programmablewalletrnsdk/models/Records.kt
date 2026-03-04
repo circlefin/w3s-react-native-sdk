@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2025 Circle Internet Group, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -15,15 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.circlefin.programmablewalletrnsdk.models
 
-import Foundation
+import expo.modules.kotlin.records.Field
+import expo.modules.kotlin.records.Record
 
-extension Array {
+/**
+ * Record for settings management configuration
+ */
+class SettingsManagementRecord : Record {
+    @Field
+    val enableBiometricsPin: Boolean = false
+}
 
-    subscript(safe index: Int) -> Element? {
-        guard indices.contains(index) else {
-            return nil
-        }
-        return self[index]
-    }
+/**
+ * Record for wallet SDK configuration
+ */
+class ConfigurationRecord : Record {
+    @Field
+    val endpoint: String? = null
+
+    @Field
+    val appId: String? = null
+
+    @Field
+    val settingsManagement: SettingsManagementRecord? = null
 }
