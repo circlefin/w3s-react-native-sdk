@@ -107,9 +107,13 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: SuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
+      let settled = false
+
       const successListener = ProgrammablewalletRnSdk.addListener(
         EVENT_NAME_ON_SUCCESS,
         (event: unknown) => {
+          if (settled) return
+          settled = true
           console.debug('[WalletSdk] Execute result')
           successCallback(event as SuccessResult)
           cleanup()
@@ -119,6 +123,8 @@ export const WalletSdk = ((): IWalletSdk => {
       const errorListener = ProgrammablewalletRnSdk.addListener(
         EVENT_NAME_ON_ERROR,
         (event: unknown) => {
+          if (settled) return
+          settled = true
           console.debug('[WalletSdk] Error event received:', event)
           // Convert event to Error object if needed
           const error =
@@ -139,12 +145,16 @@ export const WalletSdk = ((): IWalletSdk => {
       // Call native execute method
       ProgrammablewalletRnSdk.execute(userToken, encryptionKey, challengeIds)
         .then((successResult: SuccessResult) => {
+          if (settled) return
+          settled = true
           // If Promise resolves but no event was fired, call success callback
           console.debug('[WalletSdk] Promise resolved')
           successCallback(successResult)
           cleanup()
         })
         .catch((e: Error) => {
+          if (settled) return
+          settled = true
           // If Promise rejects but no event was fired, call error callback
           console.debug('[WalletSdk] Promise rejected:', e)
           errorCallback(e)
@@ -158,27 +168,43 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: LoginSuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
-      ProgrammablewalletRnSdk.addListener(EVENT_NAME_ON_ERROR, (event: unknown) => {
-        // Convert event to Error object if needed
-        const error =
-          event instanceof Error
-            ? event
-            : new Error((event as { message?: string })?.message || 'Unknown error')
-        errorCallback(error)
-      })
+      let settled = false
+
+      const errorListener = ProgrammablewalletRnSdk.addListener(
+        EVENT_NAME_ON_ERROR,
+        (event: unknown) => {
+          if (settled) return
+          settled = true
+          // Convert event to Error object if needed
+          const error =
+            event instanceof Error
+              ? event
+              : new Error((event as { message?: string })?.message || 'Unknown error')
+          errorCallback(error)
+          cleanup()
+        },
+      )
+
+      const cleanup = () => {
+        errorListener?.remove()
+      }
+
       ProgrammablewalletRnSdk.verifyOTP(
         otpToken,
         deviceToken,
         deviceEncryptionKey,
       )
         .then((result: LoginResult) => {
+          if (settled) return
+          settled = true
           successCallback(result)
+          cleanup()
         })
         .catch((e: Error) => {
+          if (settled) return
+          settled = true
           errorCallback(e)
-        })
-        .finally(() => {
-          ProgrammablewalletRnSdk.removeAllListeners(EVENT_NAME_ON_ERROR)
+          cleanup()
         })
     },
     performLogin(
@@ -226,9 +252,13 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: SuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
+      let settled = false
+
       const successListener = ProgrammablewalletRnSdk.addListener(
         EVENT_NAME_ON_SUCCESS,
         (event: unknown) => {
+          if (settled) return
+          settled = true
           successCallback(event as SuccessResult)
           cleanup()
         },
@@ -237,6 +267,8 @@ export const WalletSdk = ((): IWalletSdk => {
       const errorListener = ProgrammablewalletRnSdk.addListener(
         EVENT_NAME_ON_ERROR,
         (event: unknown) => {
+          if (settled) return
+          settled = true
           console.debug(
             '[WalletSdk] setBiometricsPin Error event received:',
             event,
@@ -260,6 +292,8 @@ export const WalletSdk = ((): IWalletSdk => {
       // Call native setBiometricsPin method
       ProgrammablewalletRnSdk.setBiometricsPin(userToken, encryptionKey)
         .then((successResult: SuccessResult) => {
+          if (settled) return
+          settled = true
           // If Promise resolves but no event was fired, call success callback
           console.debug(
             '[WalletSdk] setBiometricsPin Promise resolved:',
@@ -269,6 +303,8 @@ export const WalletSdk = ((): IWalletSdk => {
           cleanup()
         })
         .catch((e: Error) => {
+          if (settled) return
+          settled = true
           // If Promise rejects but no event was fired, call error callback
           console.debug('[WalletSdk] setBiometricsPin Promise rejected:', e)
           errorCallback(e)

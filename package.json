@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "packageManager": "yarn@1.22.22",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "build/index.js",
