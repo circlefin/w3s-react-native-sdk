@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "2.1.0",
+  "version": "2.2.1",
   "packageManager": "yarn@1.22.22",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "build/index.js",
@@ -73,23 +73,23 @@
   "homepage": "https://github.com/circlefin/w3s-react-native-sdk.git #readme",
   "devDependencies": {
     "@babel/core": "^7.28.5",
-    "@expo/config-plugins": "~10.1.2",
-    "@types/jest": "^30.0.0",
-    "@types/react": "~19.0.0",
+    "@expo/config-plugins": "~54.0.4",
+    "@types/jest": "29.5.14",
+    "@types/react": "~19.1.10",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
-    "eslint": "^9.26.0",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-native": "^5.0.0",
-    "expo": "~53.0.12",
-    "expo-module-scripts": "^4.1.6",
-    "expo-modules-core": "~2.4.2",
+    "expo": "~54.0.0",
+    "expo-module-scripts": "^5.0.8",
+    "expo-modules-core": "~3.0.29",
     "jest": "^29.7.0",
     "prettier": "^3.6.2",
-    "react": "^19.2.0",
-    "react-native": "0.79.3",
-    "react-test-renderer": "^19.2.0",
+    "react": "~19.1.0",
+    "react-native": "0.81.5",
+    "react-test-renderer": "~19.1.0",
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   },
@@ -103,5 +103,8 @@
     "expo": {
       "optional": true
     }
+  },
+  "resolutions": {
+    "@xmldom/xmldom": "0.8.12"
   }
 }
