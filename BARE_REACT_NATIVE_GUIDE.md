@@ -8,9 +8,10 @@ This guide provides step-by-step instructions for integrating the Circle User-Co
 ## System Requirements
 
 - React Native 0.60+ (recommended 0.76-0.81)
-- Node.js 16+ and npm/yarn
-- Android API 21+ (recommended API 33+)
+- Node.js 20.19+ and npm/yarn
+- Android API 21+ (recommended API 36+)
 - iOS 15.1+ (recommended iOS 17+)
+- Xcode 16.1+ (recommended 16.3+)
 - CocoaPods (for iOS projects)
 
 > [!NOTE]
@@ -314,7 +315,7 @@ Learn more about [Running On Device](https://reactnative.dev/docs/running-on-dev
 
 **Issue**: `npx install-expo-modules@latest` fails with other errors
 
-- **Solution**: Ensure Node.js 16+ is installed. Try clearing npm cache: `npm cache clean --force`
+- **Solution**: Ensure Node.js 20.19+ is installed. Try clearing npm cache: `npm cache clean --force`
 
 ### Android Build Issues
 

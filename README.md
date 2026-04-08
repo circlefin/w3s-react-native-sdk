@@ -22,8 +22,10 @@ You can also find the SDK v1 sample app in the sample app repository's [sdk-v1 b
 | ------------ | --------------- | ------------------- |
 | React Native | 0.60+           | 0.76-0.81           |
 | iOS          | 15.1+           | iOS 17+             |
-| Android      | API 21+         | API 33+             |
-| Expo SDK     | 49+             | 53+                 |
+| Android      | API 21+         | API 36+             |
+| Expo SDK     | 49+             | 54+                 |
+| Node.js      | 20.19+          | 20.20+              |
+| Xcode        | 16.1+           | 16.3+               |
 
 ## Installation
 
