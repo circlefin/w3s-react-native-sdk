@@ -42,7 +42,7 @@ const removeMocks: jest.Mock[] = []
  */
 function triggerEvent(eventName: string, payload: unknown): void {
   const callbacks = listenerMap.get(eventName) ?? []
-  callbacks.forEach((cb) => cb(payload))
+  callbacks.forEach(cb => cb(payload))
 }
 
 const mockExecute = jest.fn()
@@ -96,7 +96,11 @@ jest.mock('../ProgrammablewalletRnSdkModule', () => mockNativeModule)
 
 // Import WalletSdk AFTER mocks are set up
 import { WalletSdk } from '../WalletSdk'
+import { ImageKey } from '../types'
 import type { LoginResult, SuccessResult } from '../types'
+import { Image } from 'react-native'
+
+const mockResolveAssetSource = Image.resolveAssetSource as jest.Mock
 
 const SUCCESS_EVENT = 'CirclePwOnSuccess'
 const ERROR_EVENT = 'CirclePwOnError'
@@ -138,7 +142,7 @@ describe('WalletSdk.execute', () => {
   it('invokes successCallback exactly once when event fires before Promise resolves', async () => {
     let resolvePromise!: (value: SuccessResult) => void
     mockExecute.mockReturnValue(
-      new Promise<SuccessResult>((res) => {
+      new Promise<SuccessResult>(res => {
         resolvePromise = res
       }),
     )
@@ -146,7 +150,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Event fires first
     triggerEvent(SUCCESS_EVENT, mockSuccessResult)
@@ -165,7 +175,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Flush microtask queue so Promise .then runs
     await Promise.resolve()
@@ -188,7 +204,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Error event fires first
     triggerEvent(ERROR_EVENT, { message: 'native error' })
@@ -207,7 +229,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Flush microtask queue so Promise .catch runs
     await Promise.resolve()
@@ -225,7 +253,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Success event fires first
     triggerEvent(SUCCESS_EVENT, mockSuccessResult)
@@ -243,7 +277,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Error event fires first
     triggerEvent(ERROR_EVENT, { message: 'native error' })
@@ -258,7 +298,7 @@ describe('WalletSdk.execute', () => {
   it('removes both listeners after success event', () => {
     let resolvePromise!: (value: SuccessResult) => void
     mockExecute.mockReturnValue(
-      new Promise<SuccessResult>((res) => {
+      new Promise<SuccessResult>(res => {
         resolvePromise = res
       }),
     )
@@ -266,7 +306,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     // Snapshot remove mocks registered so far (2: success + error listeners)
     const [successRemove, errorRemove] = removeMocks.slice(-2)
@@ -291,7 +337,13 @@ describe('WalletSdk.execute', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.execute('token', 'key', ['challenge-1'], successCallback, errorCallback)
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
 
     const [successRemove, errorRemove] = removeMocks.slice(-2)
 
@@ -313,7 +365,7 @@ describe('WalletSdk.setBiometricsPin', () => {
   it('invokes successCallback exactly once when event fires before Promise resolves', async () => {
     let resolvePromise!: (value: SuccessResult) => void
     mockSetBiometricsPin.mockReturnValue(
-      new Promise<SuccessResult>((res) => {
+      new Promise<SuccessResult>(res => {
         resolvePromise = res
       }),
     )
@@ -425,7 +477,7 @@ describe('WalletSdk.setBiometricsPin', () => {
   it('removes both listeners after success event', () => {
     let resolvePromise!: (value: SuccessResult) => void
     mockSetBiometricsPin.mockReturnValue(
-      new Promise<SuccessResult>((res) => {
+      new Promise<SuccessResult>(res => {
         resolvePromise = res
       }),
     )
@@ -473,7 +525,10 @@ describe('WalletSdk.setBiometricsPin', () => {
 // verifyOTP()
 // ---------------------------------------------------------------------------
 
-const mockLoginResult: LoginResult = { userToken: 'token', encryptionKey: 'key' }
+const mockLoginResult: LoginResult = {
+  userToken: 'token',
+  encryptionKey: 'key',
+}
 
 describe('WalletSdk.verifyOTP', () => {
   it('invokes errorCallback exactly once when error event fires before Promise rejects', async () => {
@@ -487,7 +542,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     // Error event fires first
     triggerEvent(ERROR_EVENT, { message: 'native error' })
@@ -508,7 +569,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     // Flush microtask queue so Promise .catch + .finally run
     await Promise.resolve()
@@ -527,7 +594,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     await Promise.resolve()
     await Promise.resolve()
@@ -548,7 +621,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     const [errorRemove] = removeMocks.slice(-1)
 
@@ -566,7 +645,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     const [errorRemove] = removeMocks.slice(-1)
 
@@ -582,7 +667,13 @@ describe('WalletSdk.verifyOTP', () => {
     const successCallback = jest.fn()
     const errorCallback = jest.fn()
 
-    WalletSdk.verifyOTP('otp', 'deviceToken', 'encKey', successCallback, errorCallback)
+    WalletSdk.verifyOTP(
+      'otp',
+      'deviceToken',
+      'encKey',
+      successCallback,
+      errorCallback,
+    )
 
     const [errorRemove] = removeMocks.slice(-1)
 
@@ -590,5 +681,57 @@ describe('WalletSdk.verifyOTP', () => {
     await Promise.resolve()
 
     expect(errorRemove).toHaveBeenCalledTimes(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// setImageMap()
+// ---------------------------------------------------------------------------
+
+describe('WalletSdk.setImageMap', () => {
+  it('passes all entries to native module when all URIs are valid', () => {
+    mockResolveAssetSource.mockReturnValue({ uri: 'mock://asset' })
+
+    const map = new Map<ImageKey, any>([
+      [ImageKey.naviBack, 1],
+      [ImageKey.naviClose, 2],
+    ])
+
+    WalletSdk.setImageMap(map)
+
+    expect(mockNativeModule.setImageMap).toHaveBeenCalledWith({
+      [ImageKey.naviBack]: 'mock://asset',
+      [ImageKey.naviClose]: 'mock://asset',
+    })
+  })
+
+  it('filters out entries where resolveAssetSource returns empty URI', () => {
+    mockResolveAssetSource
+      .mockReturnValueOnce({ uri: 'mock://valid' })
+      .mockReturnValueOnce({ uri: '' })
+
+    const map = new Map<ImageKey, any>([
+      [ImageKey.naviBack, 1],
+      [ImageKey.naviClose, 2],
+    ])
+
+    WalletSdk.setImageMap(map)
+
+    expect(mockNativeModule.setImageMap).toHaveBeenCalledWith({
+      [ImageKey.naviBack]: 'mock://valid',
+    })
+  })
+
+  it('calls native module with empty object when all URIs resolve to null', () => {
+    mockResolveAssetSource.mockReturnValue(null)
+
+    const map = new Map<ImageKey, any>([
+      [ImageKey.naviBack, 1],
+      [ImageKey.naviClose, 2],
+    ])
+
+    WalletSdk.setImageMap(map)
+
+    expect(mockNativeModule.setImageMap).toHaveBeenCalledWith({})
   })
 })
