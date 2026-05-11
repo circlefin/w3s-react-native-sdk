@@ -17,6 +17,7 @@
  */
 
 import ExpoModulesCore
+import Foundation
 import CircleProgrammableWalletSDK
 
 let CIRCLE_PW_ON_EVENT_NAME = "CirclePwOnEvent"
@@ -143,7 +144,7 @@ public class ProgrammablewalletRnSdkModule: Module {
                             resolve: { value in promise.resolve(value) }
                         )
                     case .failure(let error):
-                        promise.reject(String(error.errorCode.rawValue), error.displayString)
+                        promise.reject(String(error.errorCode.rawValue), self._bridgePromiseErrorMessage(error))
                     }
                 }
             }
@@ -351,16 +352,43 @@ private extension ProgrammablewalletRnSdkModule {
             controller?.dismiss(animated: true)
             
             let code = String(error.errorCode.rawValue)
-            let message = error.displayString
+            let message = self._bridgePromiseErrorMessage(error)
             reject(code, message)
             
         } else {
-            let dict: [String: Any] = [
+            var dict: [String: Any] = [
                 "code": String(error.errorCode.rawValue),
-                "message": error.displayString
+                "message": self._bridgeDisplayMessage(error)
             ]
+            if let errorString = self._bridgeErrorString(error) {
+                dict["errorString"] = errorString
+            }
             self.sendEvent(CIRCLE_PW_ON_ERROR_EVENT_NAME, dict)
         }
+    }
+
+    func _bridgeDisplayMessage(_ error: ApiError) -> String {
+        let displayString = error.displayString
+        guard error.errorCode == .networkError, displayString.isEmpty else {
+            return displayString
+        }
+
+        return "Network error."
+    }
+
+    func _bridgeErrorString(_ error: ApiError) -> String? {
+        let rawErrorString = error.errorString.trimmingCharacters(in: .whitespacesAndNewlines)
+        return rawErrorString.isEmpty ? nil : rawErrorString
+    }
+
+    func _bridgePromiseErrorMessage(_ error: ApiError) -> String {
+        let displayString = self._bridgeDisplayMessage(error)
+        guard let rawErrorString = self._bridgeErrorString(error) else { return displayString }
+        guard !displayString.contains(rawErrorString) else { return displayString }
+        guard !displayString.isEmpty else { return rawErrorString }
+
+        let separator = displayString.hasSuffix(".") ? " " : ". "
+        return "\(displayString)\(separator)\(rawErrorString)"
     }
     
     func _bridgeExecuteCompletion(_ executeCompletion: CircleProgrammableWalletSDK.ExecuteCompletionStruct,
