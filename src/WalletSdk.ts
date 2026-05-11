@@ -48,6 +48,34 @@ const EVENT_NAME_ON_SUCCESS = 'CirclePwOnSuccess'
 const EVENT_NAME_ON_ERROR = 'CirclePwOnError'
 const USER_AGENT_RN = 'Circle-Programmable-Wallet-SDK-RN'
 
+type NativeErrorPayload = Record<string, unknown> & {
+  code?: string | number
+  message?: string
+}
+
+function normalizeNativeError(event: unknown): Error {
+  if (event instanceof Error) {
+    return event
+  }
+
+  const payload =
+    event && typeof event === 'object' ? (event as NativeErrorPayload) : {}
+  const message =
+    typeof payload.message === 'string' ? payload.message : 'Unknown error'
+  const error = Object.assign(new Error(message), payload) as Error &
+    Record<string, unknown> & {
+      code?: string
+    }
+
+  error.message = message
+
+  if (payload.code != null) {
+    error.code = String(payload.code)
+  }
+
+  return error
+}
+
 /**
  * Resolves React Native image sources to URI strings for native bridge
  * @param source - React Native image source
@@ -87,10 +115,17 @@ export const WalletSdk = ((): IWalletSdk => {
       ProgrammablewalletRnSdk.setCustomUserAgent(defaultUserAgentRn)
       return promise
     },
-    setSecurityQuestions(securityQuestions: Array<{ title: string; inputType?: InputType | string | number }>): void {
+    setSecurityQuestions(
+      securityQuestions: Array<{
+        title: string
+        inputType?: InputType | string | number
+      }>,
+    ): void {
       try {
         // Convert each input to a proper SecurityQuestion object
-        const normalized: SecurityQuestion[] = (securityQuestions || []).map(q => toPlainSecurityQuestion(q))
+        const normalized: SecurityQuestion[] = (securityQuestions || []).map(
+          q => toPlainSecurityQuestion(q),
+        )
 
         // toPlainSecurityQuestion already performs the necessary serialization
         // No need for bridgeSafe here as each question has been converted to a plain object
@@ -126,11 +161,7 @@ export const WalletSdk = ((): IWalletSdk => {
           if (settled) return
           settled = true
           console.debug('[WalletSdk] Error event received:', event)
-          // Convert event to Error object if needed
-          const error =
-            event instanceof Error
-              ? event
-              : new Error((event as { message?: string })?.message || 'Unknown error')
+          const error = normalizeNativeError(event)
           errorCallback(error)
           cleanup()
         },
@@ -175,11 +206,7 @@ export const WalletSdk = ((): IWalletSdk => {
         (event: unknown) => {
           if (settled) return
           settled = true
-          // Convert event to Error object if needed
-          const error =
-            event instanceof Error
-              ? event
-              : new Error((event as { message?: string })?.message || 'Unknown error')
+          const error = normalizeNativeError(event)
           errorCallback(error)
           cleanup()
         },
@@ -273,11 +300,7 @@ export const WalletSdk = ((): IWalletSdk => {
             '[WalletSdk] setBiometricsPin Error event received:',
             event,
           )
-          // Convert event to Error object if needed
-          const error =
-            event instanceof Error
-              ? event
-              : new Error((event as { message?: string })?.message || 'Unknown error')
+          const error = normalizeNativeError(event)
           errorCallback(error)
           cleanup()
         },
@@ -350,7 +373,10 @@ export const WalletSdk = ((): IWalletSdk => {
     ): void {
       try {
         // Create a transformed plain object instead of a Map
-        const processedObj: Record<string, Array<{ image: string | null; textConfig: TextConfig }>> = {}
+        const processedObj: Record<
+          string,
+          Array<{ image: string | null; textConfig: TextConfig }>
+        > = {}
 
         Array.from(rawMap.entries()).forEach(([key, configs]) => {
           const processedConfigs = configs.map(config => {

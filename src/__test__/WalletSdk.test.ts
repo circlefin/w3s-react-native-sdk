@@ -96,14 +96,24 @@ jest.mock('../ProgrammablewalletRnSdkModule', () => mockNativeModule)
 
 // Import WalletSdk AFTER mocks are set up
 import { WalletSdk } from '../WalletSdk'
-import { ImageKey } from '../types'
-import type { LoginResult, SuccessResult } from '../types'
+import { ImageKey, SocialProvider } from '../types'
+import type { Configuration, LoginResult, SuccessResult } from '../types'
 import { Image } from 'react-native'
 
+const packageJson: { version: string } = require('../../package.json')
 const mockResolveAssetSource = Image.resolveAssetSource as jest.Mock
 
 const SUCCESS_EVENT = 'CirclePwOnSuccess'
 const ERROR_EVENT = 'CirclePwOnError'
+const DEFAULT_USER_AGENT = `Circle-Programmable-Wallet-SDK-RN/${packageJson.version}`
+
+const initConfigWithSettings: Configuration = {
+  endpoint: 'https://example.com',
+  appId: 'test-app',
+  settingsManagement: {
+    enableBiometricsPin: true,
+  },
+}
 
 const mockSuccessResult: SuccessResult = {
   result: { resultType: 'CHANGE_PIN', status: 'COMPLETE' } as any,
@@ -132,6 +142,44 @@ beforeEach(() => {
       return { remove: removeMock }
     },
   )
+})
+
+// ---------------------------------------------------------------------------
+// init() / setCustomUserAgent()
+// ---------------------------------------------------------------------------
+
+describe('WalletSdk.init', () => {
+  it('invokes initSdk exactly once with the supplied configuration object', async () => {
+    await WalletSdk.init(initConfigWithSettings)
+
+    expect(mockNativeModule.initSdk).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.initSdk).toHaveBeenCalledWith(
+      initConfigWithSettings,
+    )
+  })
+
+  it('sets the default user agent before initSdk rejection propagates', async () => {
+    mockNativeModule.initSdk.mockRejectedValueOnce(new Error('init failed'))
+
+    const promise = WalletSdk.init(initConfigWithSettings)
+
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledWith(
+      DEFAULT_USER_AGENT,
+    )
+    await expect(promise).rejects.toThrow('init failed')
+  })
+})
+
+describe('WalletSdk.setCustomUserAgent', () => {
+  it('preserves the SDK prefix and separator for an empty user agent suffix', () => {
+    WalletSdk.setCustomUserAgent('')
+
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledWith(
+      `${DEFAULT_USER_AGENT} | `,
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -220,6 +268,80 @@ describe('WalletSdk.execute', () => {
     await Promise.resolve()
 
     expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(successCallback).not.toHaveBeenCalled()
+  })
+
+  it('preserves native error event code and message on execute errors', async () => {
+    let rejectPromise!: (reason: Error) => void
+    mockExecute.mockReturnValue(
+      new Promise<SuccessResult>((_, rej) => {
+        rejectPromise = rej
+      }),
+    )
+
+    const successCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
+
+    triggerEvent(ERROR_EVENT, {
+      code: '155706',
+      errorString: 'URLSession timed out while connecting to api.circle.com',
+      message: 'Network error. The request timed out.',
+      requestId: 'req_123',
+    })
+
+    rejectPromise(new Error('promise error'))
+    await Promise.resolve()
+
+    expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback.mock.calls[0][0]).toMatchObject({
+      code: '155706',
+      errorString: 'URLSession timed out while connecting to api.circle.com',
+      message: 'Network error. The request timed out.',
+      requestId: 'req_123',
+    })
+    expect(successCallback).not.toHaveBeenCalled()
+  })
+
+  it('normalizes numeric native error event codes to strings', async () => {
+    let rejectPromise!: (reason: Error) => void
+    mockExecute.mockReturnValue(
+      new Promise<SuccessResult>((_, rej) => {
+        rejectPromise = rej
+      }),
+    )
+
+    const successCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.execute(
+      'token',
+      'key',
+      ['challenge-1'],
+      successCallback,
+      errorCallback,
+    )
+
+    triggerEvent(ERROR_EVENT, {
+      code: 155706,
+      message: 'Network error',
+    })
+
+    rejectPromise(new Error('promise error'))
+    await Promise.resolve()
+
+    expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback.mock.calls[0][0]).toMatchObject({
+      code: '155706',
+      message: 'Network error',
+    })
     expect(successCallback).not.toHaveBeenCalled()
   })
 
@@ -419,6 +541,37 @@ describe('WalletSdk.setBiometricsPin', () => {
     await Promise.resolve()
 
     expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(successCallback).not.toHaveBeenCalled()
+  })
+
+  it('preserves native error payload details on setBiometricsPin errors', async () => {
+    let rejectPromise!: (reason: Error) => void
+    mockSetBiometricsPin.mockReturnValue(
+      new Promise<SuccessResult>((_, rej) => {
+        rejectPromise = rej
+      }),
+    )
+
+    const successCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.setBiometricsPin('token', 'key', successCallback, errorCallback)
+
+    triggerEvent(ERROR_EVENT, {
+      code: 155706,
+      errorString: 'URLSession timed out while connecting to api.circle.com',
+      message: 'Network error',
+    })
+
+    rejectPromise(new Error('promise error'))
+    await Promise.resolve()
+
+    expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback.mock.calls[0][0]).toMatchObject({
+      code: '155706',
+      errorString: 'URLSession timed out while connecting to api.circle.com',
+      message: 'Network error',
+    })
     expect(successCallback).not.toHaveBeenCalled()
   })
 
@@ -733,5 +886,199 @@ describe('WalletSdk.setImageMap', () => {
     WalletSdk.setImageMap(map)
 
     expect(mockNativeModule.setImageMap).toHaveBeenCalledWith({})
+  })
+})
+
+// ---------------------------------------------------------------------------
+// init() — user-agent side-effect (AGENTS.md §User-Agent Header)
+// ---------------------------------------------------------------------------
+
+const validConfig: Configuration = {
+  endpoint: 'https://example.com',
+  appId: 'test-app',
+}
+
+// Semver-compatible version suffix: CI pipelines append build metadata
+// (e.g. 2.0.0-693) to package.json#version before running tests, so the
+// pattern must accept the optional pre-release/build segment.
+const VERSION_PATTERN = String.raw`\d+\.\d+\.\d+(?:[-+][\w.-]+)?`
+
+describe('WalletSdk.init — user-agent side-effect', () => {
+  it('calls setCustomUserAgent with Circle-Programmable-Wallet-SDK-RN/<version>', () => {
+    WalletSdk.init(validConfig)
+
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledWith(
+      expect.stringMatching(
+        new RegExp(`^Circle-Programmable-Wallet-SDK-RN\\/${VERSION_PATTERN}$`),
+      ),
+    )
+  })
+
+  it('calls setCustomUserAgent synchronously before the init Promise resolves', () => {
+    // Never-resolving Promise — if setCustomUserAgent were placed after an
+    // `await` of the initSdk result, the spy would never fire.
+    mockNativeModule.initSdk.mockReturnValueOnce(new Promise<void>(() => {}))
+
+    // Deliberately do not await — assert the synchronous side-effect.
+    void WalletSdk.init(validConfig)
+
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledWith(
+      expect.stringMatching(
+        new RegExp(`^Circle-Programmable-Wallet-SDK-RN\\/${VERSION_PATTERN}$`),
+      ),
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// setCustomUserAgent() — prefix prepend (AGENTS.md §User-Agent Header)
+// ---------------------------------------------------------------------------
+
+describe('WalletSdk.setCustomUserAgent — prefix prepend', () => {
+  it('forwards Circle-Programmable-Wallet-SDK-RN/<version> | <userAgent> to native', () => {
+    WalletSdk.setCustomUserAgent('myAgent')
+
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledWith(
+      expect.stringMatching(
+        new RegExp(
+          `^Circle-Programmable-Wallet-SDK-RN\\/${VERSION_PATTERN} \\| myAgent$`,
+        ),
+      ),
+    )
+  })
+
+  it('does NOT forward the raw userAgent string as-is', () => {
+    WalletSdk.setCustomUserAgent('myAgent')
+
+    expect(mockNativeModule.setCustomUserAgent).not.toHaveBeenCalledWith(
+      'myAgent',
+    )
+  })
+
+  it('propagates the exact native error instance to the caller', () => {
+    const nativeError = new Error('native UA error')
+    mockNativeModule.setCustomUserAgent.mockImplementationOnce(() => {
+      throw nativeError
+    })
+
+    let caught: unknown
+    try {
+      WalletSdk.setCustomUserAgent('anything')
+    } catch (e) {
+      caught = e
+    }
+
+    expect(caught).toBe(nativeError)
+    expect(mockNativeModule.setCustomUserAgent).toHaveBeenCalledTimes(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// performLogin() — Promise-only settlement
+// ---------------------------------------------------------------------------
+
+describe('WalletSdk.performLogin', () => {
+  it('invokes successCallback exactly once with LoginResult when Promise resolves', async () => {
+    mockNativeModule.performLogin.mockResolvedValueOnce(mockLoginResult)
+
+    const successCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.performLogin(
+      SocialProvider.Google,
+      'dtoken',
+      'ekey',
+      successCallback,
+      errorCallback,
+    )
+
+    // Flush microtask queue so Promise .then runs
+    await Promise.resolve()
+
+    expect(mockNativeModule.performLogin).toHaveBeenCalledWith(
+      SocialProvider.Google,
+      'dtoken',
+      'ekey',
+    )
+    expect(successCallback).toHaveBeenCalledTimes(1)
+    expect(successCallback).toHaveBeenCalledWith(mockLoginResult)
+    expect(errorCallback).not.toHaveBeenCalled()
+  })
+
+  it('invokes errorCallback exactly once with Error when Promise rejects', async () => {
+    const rejection = new Error('login failed')
+    mockNativeModule.performLogin.mockRejectedValueOnce(rejection)
+
+    const successCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.performLogin(
+      SocialProvider.Google,
+      'dtoken',
+      'ekey',
+      successCallback,
+      errorCallback,
+    )
+
+    // Flush microtask queue so Promise .then → .catch chain runs
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback).toHaveBeenCalledWith(rejection)
+    expect(successCallback).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// performLogout() — Promise-only settlement
+// ---------------------------------------------------------------------------
+
+describe('WalletSdk.performLogout', () => {
+  it('invokes completedCallback exactly once when Promise resolves', async () => {
+    mockNativeModule.performLogout.mockResolvedValueOnce(undefined)
+
+    const completedCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.performLogout(
+      SocialProvider.Google,
+      completedCallback,
+      errorCallback,
+    )
+
+    // Flush microtask queue so Promise .then runs
+    await Promise.resolve()
+
+    expect(mockNativeModule.performLogout).toHaveBeenCalledWith(
+      SocialProvider.Google,
+    )
+    expect(completedCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback).not.toHaveBeenCalled()
+  })
+
+  it('invokes errorCallback exactly once with Error when Promise rejects', async () => {
+    const rejection = new Error('logout failed')
+    mockNativeModule.performLogout.mockRejectedValueOnce(rejection)
+
+    const completedCallback = jest.fn()
+    const errorCallback = jest.fn()
+
+    WalletSdk.performLogout(
+      SocialProvider.Google,
+      completedCallback,
+      errorCallback,
+    )
+
+    // Flush microtask queue so Promise .then → .catch chain runs
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(errorCallback).toHaveBeenCalledTimes(1)
+    expect(errorCallback).toHaveBeenCalledWith(rejection)
+    expect(completedCallback).not.toHaveBeenCalled()
   })
 })

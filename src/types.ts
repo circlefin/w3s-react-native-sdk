@@ -34,6 +34,9 @@ export type CirclePwSuccessPayload = {
 }
 
 export type CirclePwErrorPayload = {
+  code?: string | number
+  errorString?: string
+  message: string
   [key: string]: unknown
 }
 
@@ -378,6 +381,7 @@ export interface SuccessResult {
 
 export interface Error {
   code?: string
+  errorString?: string
   message: string
 }
 
