@@ -312,6 +312,22 @@ object RecordsHelper {
         )
     }
 
+    /**
+     * Resolve the JS-facing error message for initSdk failures.
+     *
+     * [convertedMessage] is `convertApiErrorToMap(error)["message"]`, which is
+     * `customMessage ?: error.message` with no blank check — so a **blank**
+     * `setErrorStringMap` override is returned as-is (not treated as absent).
+     * The [rawMessage] fallback (the SDK's `error.message`) is therefore NOT
+     * dead code: it recovers the raw message when the override is blank as well
+     * as when the converted message is absent. Falls back to a generic default
+     * so the JS error contract (message always present and UI-readable) holds.
+     */
+    fun resolveInitErrorMessage(convertedMessage: String?, rawMessage: String?): String =
+        convertedMessage?.takeIf { it.isNotBlank() }
+            ?: rawMessage?.takeIf { it.isNotBlank() }
+            ?: "SDK initialization failed"
+
     fun convertExecuteWarningToMap(warning: ExecuteWarning): Map<String, Any?> {
         return mapOf(
             "warningType" to warning.warningType,
