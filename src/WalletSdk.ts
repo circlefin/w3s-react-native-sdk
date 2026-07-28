@@ -142,55 +142,47 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: SuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
-      let settled = false
+      let cleanup = () => undefined
 
-      const successListener = ProgrammablewalletRnSdk.addListener(
-        EVENT_NAME_ON_SUCCESS,
-        (event: unknown) => {
-          if (settled) return
-          settled = true
-          console.debug('[WalletSdk] Execute result')
-          successCallback(event as SuccessResult)
-          cleanup()
-        },
-      )
+      const settlement = new Promise<SuccessResult>((resolve, reject) => {
+        const successListener = ProgrammablewalletRnSdk.addListener(
+          EVENT_NAME_ON_SUCCESS,
+          (event: unknown) => {
+            resolve(event as SuccessResult)
+          },
+        )
 
-      const errorListener = ProgrammablewalletRnSdk.addListener(
-        EVENT_NAME_ON_ERROR,
-        (event: unknown) => {
-          if (settled) return
-          settled = true
-          console.debug('[WalletSdk] Error event received:', event)
-          const error = normalizeNativeError(event)
-          errorCallback(error)
-          cleanup()
-        },
-      )
+        const errorListener = ProgrammablewalletRnSdk.addListener(
+          EVENT_NAME_ON_ERROR,
+          (event: unknown) => {
+            reject(normalizeNativeError(event))
+          },
+        )
 
-      // Cleanup function to remove listeners
-      const cleanup = () => {
-        successListener?.remove()
-        errorListener?.remove()
-      }
+        cleanup = () => {
+          successListener?.remove()
+          errorListener?.remove()
+        }
 
-      // Call native execute method
-      ProgrammablewalletRnSdk.execute(userToken, encryptionKey, challengeIds)
-        .then((successResult: SuccessResult) => {
-          if (settled) return
-          settled = true
-          // If Promise resolves but no event was fired, call success callback
-          console.debug('[WalletSdk] Promise resolved')
-          successCallback(successResult)
-          cleanup()
-        })
-        .catch((e: Error) => {
-          if (settled) return
-          settled = true
-          // If Promise rejects but no event was fired, call error callback
-          console.debug('[WalletSdk] Promise rejected:', e)
-          errorCallback(e)
-          cleanup()
-        })
+        ProgrammablewalletRnSdk.execute(
+          userToken,
+          encryptionKey,
+          challengeIds,
+        ).then(resolve, reject)
+      })
+
+      void settlement
+        .then(
+          (successResult: SuccessResult) => {
+            console.debug('[WalletSdk] Execute result')
+            successCallback(successResult)
+          },
+          (e: Error) => {
+            console.debug('[WalletSdk] Execute error:', e)
+            errorCallback(e)
+          },
+        )
+        .finally(cleanup)
     },
     verifyOTP(
       otpToken: string,
@@ -199,40 +191,37 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: LoginSuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
-      let settled = false
+      let cleanup = () => undefined
 
-      const errorListener = ProgrammablewalletRnSdk.addListener(
-        EVENT_NAME_ON_ERROR,
-        (event: unknown) => {
-          if (settled) return
-          settled = true
-          const error = normalizeNativeError(event)
-          errorCallback(error)
-          cleanup()
-        },
-      )
+      const settlement = new Promise<LoginResult>((resolve, reject) => {
+        const errorListener = ProgrammablewalletRnSdk.addListener(
+          EVENT_NAME_ON_ERROR,
+          (event: unknown) => {
+            reject(normalizeNativeError(event))
+          },
+        )
 
-      const cleanup = () => {
-        errorListener?.remove()
-      }
+        cleanup = () => {
+          errorListener?.remove()
+        }
 
-      ProgrammablewalletRnSdk.verifyOTP(
-        otpToken,
-        deviceToken,
-        deviceEncryptionKey,
-      )
-        .then((result: LoginResult) => {
-          if (settled) return
-          settled = true
-          successCallback(result)
-          cleanup()
-        })
-        .catch((e: Error) => {
-          if (settled) return
-          settled = true
-          errorCallback(e)
-          cleanup()
-        })
+        ProgrammablewalletRnSdk.verifyOTP(
+          otpToken,
+          deviceToken,
+          deviceEncryptionKey,
+        ).then(resolve, reject)
+      })
+
+      void settlement
+        .then(
+          (result: LoginResult) => {
+            successCallback(result)
+          },
+          (e: Error) => {
+            errorCallback(e)
+          },
+        )
+        .finally(cleanup)
     },
     performLogin(
       provider: SocialProvider,
@@ -279,60 +268,46 @@ export const WalletSdk = ((): IWalletSdk => {
       successCallback: SuccessCallback,
       errorCallback: ErrorCallback,
     ): void {
-      let settled = false
+      let cleanup = () => undefined
 
-      const successListener = ProgrammablewalletRnSdk.addListener(
-        EVENT_NAME_ON_SUCCESS,
-        (event: unknown) => {
-          if (settled) return
-          settled = true
-          successCallback(event as SuccessResult)
-          cleanup()
-        },
-      )
+      const settlement = new Promise<SuccessResult>((resolve, reject) => {
+        const successListener = ProgrammablewalletRnSdk.addListener(
+          EVENT_NAME_ON_SUCCESS,
+          (event: unknown) => {
+            resolve(event as SuccessResult)
+          },
+        )
 
-      const errorListener = ProgrammablewalletRnSdk.addListener(
-        EVENT_NAME_ON_ERROR,
-        (event: unknown) => {
-          if (settled) return
-          settled = true
-          console.debug(
-            '[WalletSdk] setBiometricsPin Error event received:',
-            event,
-          )
-          const error = normalizeNativeError(event)
-          errorCallback(error)
-          cleanup()
-        },
-      )
+        const errorListener = ProgrammablewalletRnSdk.addListener(
+          EVENT_NAME_ON_ERROR,
+          (event: unknown) => {
+            reject(normalizeNativeError(event))
+          },
+        )
 
-      // Cleanup function to remove listeners
-      const cleanup = () => {
-        successListener?.remove()
-        errorListener?.remove()
-      }
+        cleanup = () => {
+          successListener?.remove()
+          errorListener?.remove()
+        }
 
-      // Call native setBiometricsPin method
-      ProgrammablewalletRnSdk.setBiometricsPin(userToken, encryptionKey)
-        .then((successResult: SuccessResult) => {
-          if (settled) return
-          settled = true
-          // If Promise resolves but no event was fired, call success callback
-          console.debug(
-            '[WalletSdk] setBiometricsPin Promise resolved:',
-            successResult,
-          )
-          successCallback(successResult)
-          cleanup()
-        })
-        .catch((e: Error) => {
-          if (settled) return
-          settled = true
-          // If Promise rejects but no event was fired, call error callback
-          console.debug('[WalletSdk] setBiometricsPin Promise rejected:', e)
-          errorCallback(e)
-          cleanup()
-        })
+        ProgrammablewalletRnSdk.setBiometricsPin(userToken, encryptionKey).then(
+          resolve,
+          reject,
+        )
+      })
+
+      void settlement
+        .then(
+          (successResult: SuccessResult) => {
+            console.debug('[WalletSdk] setBiometricsPin result:', successResult)
+            successCallback(successResult)
+          },
+          (e: Error) => {
+            console.debug('[WalletSdk] setBiometricsPin error:', e)
+            errorCallback(e)
+          },
+        )
+        .finally(cleanup)
     },
 
     setDismissOnCallbackMap(map: Map<ErrorCode, boolean>): void {

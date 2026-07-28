@@ -21,6 +21,7 @@ package com.circlefin.programmablewalletrnsdk
 import android.util.Log
 import circle.programmablewallet.sdk.WalletSdk
 import circle.programmablewallet.sdk.WalletSdk.init
+import circle.programmablewallet.sdk.api.ApiError
 import circle.programmablewallet.sdk.api.ExecuteEvent
 import circle.programmablewallet.sdk.api.SocialProvider
 import circle.programmablewallet.sdk.api.SocialCallback
@@ -88,6 +89,20 @@ class ProgrammablewalletRnSdkModule : Module(), EventListener {
                     WalletSdk.Configuration(endpoint, appId, settings)
                 )
                 promise.resolve(emptyMap<String, Any>())
+            } catch (e: ApiError) {
+                // Surface the real ApiError code + message to JS. The converted
+                // message (convertApiErrorToMap) applies setErrorStringMap overrides
+                // — unlike PromiseCallback's dismiss branch, which uses the raw
+                // error.message; keep that distinction if consolidating paths.
+                // resolveInitErrorMessage falls back to the raw error.message when
+                // the converted message is blank (e.g. a blank override) or absent,
+                // then to a generic default, so the JS error contract (message
+                // always present and UI-readable) always holds.
+                val message = RecordsHelper.resolveInitErrorMessage(
+                    RecordsHelper.convertApiErrorToMap(e)["message"] as? String,
+                    e.message
+                )
+                promise.reject(CodedException(e.code.value.toString(), message, e))
             } catch (e: Throwable) {
                 promise.reject(CodedException(e))
             }
