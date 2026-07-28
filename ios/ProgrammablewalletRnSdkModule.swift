@@ -59,29 +59,43 @@ public class ProgrammablewalletRnSdkModule: Module {
         }
         
         // Initialize SDK with configuration
-        AsyncFunction("initSdk") { (configuration: [String: Any]) async throws -> Void in
-            
-            WalletSdk.shared.setLayoutProvider(self)
-            WalletSdk.shared.setDelegate(self)
-            WalletSdk.shared.setErrorMessenger(self)
-            
+        // Unlike execute/performLogin/performLogout, this does not dispatch to
+        // the main queue: setConfiguration only validates input and assigns
+        // properties (no UIKit work), so it is safe to run inline.
+        AsyncFunction("initSdk") { (configuration: [String: Any], promise: Promise) in
+
             var endPoint = configuration["endpoint"] as? String ?? ""
             if endPoint.last == "/" {
                 endPoint.removeLast()
             }
             let appId = configuration["appId"] as? String ?? ""
-            
+
             var enableBiometricsPin = false
             if let settingsManagement = configuration["settingsManagement"] as? [String: Any],
                let enableBio = settingsManagement["enableBiometricsPin"] as? Bool {
                 enableBiometricsPin = enableBio
             }
-            
+
             let settings = WalletSdk.SettingsManagement(enableBiometricsPin: enableBiometricsPin)
             let sdkConfig = WalletSdk.Configuration(endPoint: endPoint, appId: appId, settingsManagement: settings)
-            
-            try WalletSdk.shared.setConfiguration(sdkConfig)
-            return
+
+            do {
+                try WalletSdk.shared.setConfiguration(sdkConfig)
+                // Only wire the shared singleton to this module after config
+                // validation succeeds, so a failed configure doesn't leave the
+                // singleton wired ahead of a valid configuration.
+                WalletSdk.shared.setLayoutProvider(self)
+                WalletSdk.shared.setDelegate(self)
+                WalletSdk.shared.setErrorMessenger(self)
+                promise.resolve(nil)
+            } catch let error as ApiError {
+                // Surface the real ApiError code + errorString to JS, consistent with
+                // the other Promise-based operations (performLogin / performLogout).
+                promise.reject(String(error.errorCode.rawValue), self._bridgePromiseErrorMessage(error))
+            } catch {
+                let nsError = error as NSError
+                promise.reject(String(nsError.code), nsError.localizedDescription)
+            }
         }
         
         // Set security questions for the wallet
@@ -156,8 +170,18 @@ public class ProgrammablewalletRnSdkModule: Module {
                 return
             }
             DispatchQueue.main.async {
-                WalletSdk.shared.performLogout(provider: socialProvider) { _ in
-                    promise.resolve(nil)
+                WalletSdk.shared.performLogout(provider: socialProvider) { logoutResult in
+                    switch logoutResult {
+                    case .success:
+                        promise.resolve(nil)
+                    case .failure(let error):
+                        if let apiError = error as? ApiError {
+                            promise.reject(String(apiError.errorCode.rawValue), self._bridgePromiseErrorMessage(apiError))
+                        } else {
+                            let nsError = error as NSError
+                            promise.reject(String(nsError.code), nsError.localizedDescription)
+                        }
+                    }
                 }
             }
         }
