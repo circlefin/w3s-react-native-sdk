@@ -29,9 +29,7 @@ export type CirclePwEventPayload = {
   name: ExecuteEvent
 }
 
-export type CirclePwSuccessPayload = {
-  [key: string]: SuccessResult
-}
+export type CirclePwSuccessPayload = SuccessResult
 
 export type CirclePwErrorPayload = {
   code?: string | number

@@ -16,140 +16,214 @@
  * limitations under the License.
  */
 
-import { toPlainSecurityQuestion, normalizeInputType, getStringFromUnknown } from '../../utils/securityQuestionUtils'
+import {
+  getStringFromUnknown,
+  normalizeInputType,
+  toPlainSecurityQuestion,
+} from '../../utils/securityQuestionUtils'
 import { InputType } from '../../types'
 
 describe('securityQuestionUtils', () => {
-    describe('getStringFromUnknown', () => {
-        it('handles null and undefined', () => {
-            expect(getStringFromUnknown(null)).toBe('')
-            expect(getStringFromUnknown(undefined)).toBe('')
-        })
-
-        it('handles objects with name property', () => {
-            expect(getStringFromUnknown({ name: 'Test Object' })).toBe('Test Object')
-        })
-
-        it('uses toString for other values', () => {
-            expect(getStringFromUnknown(123)).toBe('123')
-            expect(getStringFromUnknown(true)).toBe('true')
-        })
+  describe('getStringFromUnknown', () => {
+    it('returns an empty string for nullish values', () => {
+      expect(getStringFromUnknown(null)).toBe('')
+      expect(getStringFromUnknown(undefined)).toBe('')
     })
 
-    describe('normalizeInputType', () => {
-        it('returns InputType directly if already correct', () => {
-            expect(normalizeInputType(InputType.text)).toBe(InputType.text)
-            expect(normalizeInputType(InputType.datePicker)).toBe(InputType.datePicker)
-        })
-
-        it('handles string inputs', () => {
-            expect(normalizeInputType('text')).toBe(InputType.text)
-            expect(normalizeInputType('date')).toBe(InputType.datePicker)
-            expect(normalizeInputType('birthday')).toBe(InputType.datePicker)
-        })
-
-        it('handles numeric inputs', () => {
-            expect(normalizeInputType(0)).toBe(InputType.text)
-            expect(normalizeInputType(1)).toBe(InputType.datePicker)
-        })
-
-        it('handles null and undefined', () => {
-            expect(normalizeInputType(null)).toBeUndefined()
-            expect(normalizeInputType(undefined)).toBeUndefined()
-        })
-
-        it('defaults to text for unexpected values', () => {
-            expect(normalizeInputType({})).toBe(InputType.text)
-            expect(normalizeInputType([])).toBe(InputType.text)
-            expect(normalizeInputType(2)).toBe(InputType.text) // not a valid enum value
-        })
+    it('returns the name property for objects with a string name', () => {
+      expect(getStringFromUnknown({ name: 'date' })).toBe('date')
     })
 
-    describe('toPlainSecurityQuestion', () => {
-        it('handles array input format correctly', () => {
-            // Test tuple format [title, inputType]
-            const result1 = toPlainSecurityQuestion(['What is your pet name?', InputType.text])
-            expect(result1.title).toBe('What is your pet name?')
-            expect(result1.inputType).toBe(InputType.text)
-
-            const result2 = toPlainSecurityQuestion(['When is your birthday?', InputType.datePicker])
-            expect(result2.title).toBe('When is your birthday?')
-            expect(result2.inputType).toBe(InputType.datePicker)
-
-            // Test string input type
-            const result3 = toPlainSecurityQuestion(['Birth date?', 'date'])
-            expect(result3.title).toBe('Birth date?')
-            expect(result3.inputType).toBe(InputType.datePicker)
-
-            // Test numeric input type
-            const result4 = toPlainSecurityQuestion(['Question?', 1])
-            expect(result4.title).toBe('Question?')
-            expect(result4.inputType).toBe(InputType.datePicker)
-        })
-
-        it('handles object input format correctly', () => {
-            // Standard object format
-            const result1 = toPlainSecurityQuestion({ title: 'What is your pet name?', inputType: InputType.text })
-            expect(result1.title).toBe('What is your pet name?')
-            expect(result1.inputType).toBe(InputType.text)
-
-            // Capitalized property names
-            const result2 = toPlainSecurityQuestion({ Title: 'Question with capital T', InputType: InputType.datePicker })
-            expect(result2.title).toBe('Question with capital T')
-            expect(result2.inputType).toBe(InputType.datePicker)
-
-            // String input type
-            const result3 = toPlainSecurityQuestion({ title: 'Birth date?', inputType: 'date' })
-            expect(result3.title).toBe('Birth date?')
-            expect(result3.inputType).toBe(InputType.datePicker)
-
-            // Using getter methods
-            const objWithGetters = {
-                getTitle: () => 'Title from getter',
-                getInputType: () => InputType.datePicker
-            }
-            const result4 = toPlainSecurityQuestion(objWithGetters)
-            expect(result4.title).toBe('Title from getter')
-            expect(result4.inputType).toBe(InputType.datePicker)
-        })
-
-        it('handles string and primitive input correctly', () => {
-            // Direct string
-            const result1 = toPlainSecurityQuestion('Simple question string')
-            expect(result1.title).toBe('Simple question string')
-            expect(result1.inputType).toBe(InputType.text) // Default is text
-
-            // Number
-            const result2 = toPlainSecurityQuestion(123)
-            expect(result2.title).toBe('123')
-            expect(result2.inputType).toBe(InputType.text)
-
-            // Boolean
-            const result3 = toPlainSecurityQuestion(true)
-            expect(result3.title).toBe('true')
-            expect(result3.inputType).toBe(InputType.text)
-        })
-
-        it('handles empty or falsy input correctly', () => {
-            // Empty array
-            const result1 = toPlainSecurityQuestion([])
-            expect(result1.title).toBe('')
-            expect(result1.inputType).toBe(InputType.text)
-
-            // Empty object
-            const result2 = toPlainSecurityQuestion({})
-            expect(result2.title).toBe('')
-            expect(result2.inputType).toBe(InputType.text)
-
-            // null
-            const result3 = toPlainSecurityQuestion(null)
-            expect(result3.title).toBe('')
-            expect(result3.inputType).toBe(InputType.text)
-
-            // undefined
-            const result4 = toPlainSecurityQuestion(undefined)
-            expect(result4.title).toBe('')
-            expect(result4.inputType).toBe(InputType.text)
-        })
+    it('falls back to toString for values without a string name', () => {
+      expect(getStringFromUnknown(42)).toBe('42')
+      expect(
+        getStringFromUnknown({
+          toString: () => 'custom date value',
+        }),
+      ).toBe('custom date value')
     })
+  })
+
+  describe('normalizeInputType', () => {
+    let warnSpy: jest.SpyInstance
+
+    beforeEach(() => {
+      warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      warnSpy.mockRestore()
+    })
+
+    it('returns undefined for nullish values', () => {
+      expect(normalizeInputType(null)).toBeUndefined()
+      expect(normalizeInputType(undefined)).toBeUndefined()
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('returns enum input types unchanged', () => {
+      expect(normalizeInputType(InputType.text)).toBe(InputType.text)
+      expect(normalizeInputType(InputType.datePicker)).toBe(
+        InputType.datePicker,
+      )
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('maps date-like strings to datePicker', () => {
+      expect(normalizeInputType('birthday')).toBe(InputType.datePicker)
+      expect(normalizeInputType('dateOfBirth')).toBe(InputType.datePicker)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('maps text strings to text without warning', () => {
+      expect(normalizeInputType('text')).toBe(InputType.text)
+      expect(normalizeInputType('')).toBe(InputType.text)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('warns once and defaults unexpected strings to text', () => {
+      expect(normalizeInputType('other')).toBe(InputType.text)
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Unexpected inputType string: "other"'),
+      )
+    })
+
+    it('maps numeric input types without warning', () => {
+      expect(normalizeInputType(0)).toBe(InputType.text)
+      expect(normalizeInputType(1)).toBe(InputType.datePicker)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('warns once and defaults unexpected numbers to text', () => {
+      expect(normalizeInputType(2)).toBe(InputType.text)
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Unexpected inputType number: 2'),
+      )
+    })
+
+    it('maps objects with date hints to datePicker', () => {
+      expect(
+        normalizeInputType({
+          toString: () => 'datePicker',
+        }),
+      ).toBe(InputType.datePicker)
+      expect(normalizeInputType({ name: 'dateOfBirth' })).toBe(
+        InputType.datePicker,
+      )
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('defaults named objects without a date hint to text', () => {
+      expect(normalizeInputType({ name: 'city' })).toBe(InputType.text)
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Unexpected inputType: object'),
+      )
+    })
+
+    it('warns once and defaults arbitrary objects to text', () => {
+      expect(normalizeInputType({})).toBe(InputType.text)
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Unexpected inputType: object'),
+      )
+    })
+  })
+
+  describe('toPlainSecurityQuestion', () => {
+    it('handles array input format correctly', () => {
+      const textQuestion = toPlainSecurityQuestion([
+        'What is your pet name?',
+        InputType.text,
+      ])
+      expect(textQuestion.title).toBe('What is your pet name?')
+      expect(textQuestion.inputType).toBe(InputType.text)
+
+      const dateQuestion = toPlainSecurityQuestion([
+        'When is your birthday?',
+        InputType.datePicker,
+      ])
+      expect(dateQuestion.title).toBe('When is your birthday?')
+      expect(dateQuestion.inputType).toBe(InputType.datePicker)
+
+      const stringInputTypeQuestion = toPlainSecurityQuestion([
+        'Birth date?',
+        'date',
+      ])
+      expect(stringInputTypeQuestion.title).toBe('Birth date?')
+      expect(stringInputTypeQuestion.inputType).toBe(InputType.datePicker)
+
+      const numericInputTypeQuestion = toPlainSecurityQuestion(['Question?', 1])
+      expect(numericInputTypeQuestion.title).toBe('Question?')
+      expect(numericInputTypeQuestion.inputType).toBe(InputType.datePicker)
+    })
+
+    it('handles object input format correctly', () => {
+      const textQuestion = toPlainSecurityQuestion({
+        title: 'What is your pet name?',
+        inputType: InputType.text,
+      })
+      expect(textQuestion.title).toBe('What is your pet name?')
+      expect(textQuestion.inputType).toBe(InputType.text)
+
+      const capitalizedQuestion = toPlainSecurityQuestion({
+        Title: 'Question with capital T',
+        InputType: InputType.datePicker,
+      })
+      expect(capitalizedQuestion.title).toBe('Question with capital T')
+      expect(capitalizedQuestion.inputType).toBe(InputType.datePicker)
+
+      const stringInputTypeQuestion = toPlainSecurityQuestion({
+        title: 'Birth date?',
+        inputType: 'date',
+      })
+      expect(stringInputTypeQuestion.title).toBe('Birth date?')
+      expect(stringInputTypeQuestion.inputType).toBe(InputType.datePicker)
+
+      const getterQuestion = toPlainSecurityQuestion({
+        getTitle: () => 'Title from getter',
+        getInputType: () => InputType.datePicker,
+      })
+      expect(getterQuestion.title).toBe('Title from getter')
+      expect(getterQuestion.inputType).toBe(InputType.datePicker)
+    })
+
+    it('handles string and primitive input correctly', () => {
+      const stringQuestion = toPlainSecurityQuestion('Simple question string')
+      expect(stringQuestion.title).toBe('Simple question string')
+      expect(stringQuestion.inputType).toBe(InputType.text)
+
+      const numberQuestion = toPlainSecurityQuestion(123)
+      expect(numberQuestion.title).toBe('123')
+      expect(numberQuestion.inputType).toBe(InputType.text)
+
+      const booleanQuestion = toPlainSecurityQuestion(true)
+      expect(booleanQuestion.title).toBe('true')
+      expect(booleanQuestion.inputType).toBe(InputType.text)
+    })
+
+    it('handles empty or falsy input correctly', () => {
+      const emptyArrayQuestion = toPlainSecurityQuestion([])
+      expect(emptyArrayQuestion.title).toBe('')
+      expect(emptyArrayQuestion.inputType).toBe(InputType.text)
+
+      const emptyObjectQuestion = toPlainSecurityQuestion({})
+      expect(emptyObjectQuestion.title).toBe('')
+      expect(emptyObjectQuestion.inputType).toBe(InputType.text)
+
+      const nullQuestion = toPlainSecurityQuestion(null)
+      expect(nullQuestion.title).toBe('')
+      expect(nullQuestion.inputType).toBe(InputType.text)
+
+      const undefinedQuestion = toPlainSecurityQuestion(undefined)
+      expect(undefinedQuestion.title).toBe('')
+      expect(undefinedQuestion.inputType).toBe(InputType.text)
+    })
+  })
 })
