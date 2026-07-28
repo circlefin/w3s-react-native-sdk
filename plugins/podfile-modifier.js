@@ -5,7 +5,7 @@ const path = require('path')
 /**
  * Simple Podfile modifier plugin for Circle SDK
  */
-const withPodfileModifier = (config, options = {}) => {
+const withPodfileModifier = config => {
   return withDangerousMod(config, [
     'ios',
     async config => {
