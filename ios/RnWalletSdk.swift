@@ -236,6 +236,11 @@ public class RNWalletSdk: NSObject {
             guard let sdkVc = self.sdkNavigationController else { return }
             let topMostVC = UIApplication.shared.topMostViewController()
             sdkVc.modalPresentationStyle = .overFullScreen
+            sdkVc.view.frame = UIScreen.main.bounds
+            // Configure to ignore safe area insets and extend behind the status bar
+            if #available(iOS 11.0, *) {
+                sdkVc.additionalSafeAreaInsets = UIEdgeInsets(top: -sdkVc.view.safeAreaInsets.top, left: 0, bottom: 0, right: 0)
+            }
             topMostVC?.present(sdkVc, animated: true)
             print("moveTaskToFront")
         }
