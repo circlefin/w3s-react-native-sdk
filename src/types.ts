@@ -1,118 +1,73 @@
-/**
- * Copyright 2025 Circle Internet Group, Inc. All rights reserved.
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import { ImageSourcePropType } from 'react-native'
-
-export type ProgrammablewalletRnSdkModuleEvents = {
-  CirclePwOnEvent: (params: CirclePwEventPayload) => void
-  CirclePwOnSuccess: (params: CirclePwSuccessPayload) => void
-  CirclePwOnError: (params: CirclePwErrorPayload) => void
-}
-
-export const CIRCLE_PW_ON_EVENT = 'CirclePwOnEvent'
-
-export type CirclePwEventPayload = {
-  name: ExecuteEvent
-}
-
-export type CirclePwSuccessPayload = SuccessResult
-
-export type CirclePwErrorPayload = {
-  code?: string | number
-  errorString?: string
-  message: string
-  [key: string]: unknown
-}
+// Copyright (c) 2024, Circle Internet Financial, LTD. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import type { ImageSourcePropType } from 'react-native/Libraries/Image/Image'
 
 export interface IWalletSdk {
-  sdkVersion: SdkVersion
-  deviceId: string
-  getDeviceId: () => string
-  init: (configuration: Configuration) => Promise<void>
-  setSecurityQuestions: (securityQuestions: SecurityQuestion[]) => void
+  sdkVersion: SdkVersion;
+  deviceId: string;
+  init: (configuration: Configuration) => Promise<void>;
+  setSecurityQuestions: (securityQuestions: SecurityQuestion[]) => void;
+  addListener: (listener: EventListener) => void;
+  removeAllListeners: () => void;
+  getDeviceId: () => string;
   execute: (
     userToken: string,
     encryptionKey: string,
     challengeIds: string[],
     successCallback: SuccessCallback,
     errorCallback: ErrorCallback,
-  ) => void
-  verifyOTP: (
-    otpToken: string,
-    deviceToken: string,
-    deviceEncryptionKey: string,
-    successCallback: LoginSuccessCallback,
+  ) => void;
+  setBiometricsPin: (
+    userToken: string,
+    encryptionKey: string,
+    successCallback: SuccessCallback,
     errorCallback: ErrorCallback,
-  ) => void
+  ) => void;
   performLogin: (
     provider: SocialProvider,
     deviceToken: string,
     deviceEncryptionKey: string,
     successCallback: LoginSuccessCallback,
     errorCallback: ErrorCallback,
-  ) => void
+  ) => void;
+  verifyOTP: (
+    otpToken: string,
+    deviceToken: string,
+    deviceEncryptionKey: string,
+    successCallback: LoginSuccessCallback,
+    errorCallback: ErrorCallback,
+  ) => void;
   performLogout: (
     provider: SocialProvider,
-    completedCallback: CompletedCallback,
+    completeCallback: CompleteCallback,
     errorCallback: ErrorCallback,
-  ) => void
-  setBiometricsPin: (
-    userToken: string,
-    encryptionKey: string,
-    successCallback: SuccessCallback,
-    errorCallback: ErrorCallback,
-  ) => void
-
-  setDismissOnCallbackMap: (map: Map<ErrorCode, boolean>) => void
-  moveTaskToFront: () => void
-  moveRnTaskToFront: () => void
-  setTextConfigsMap: (map: Map<TextsKey, TextConfig[]>) => void
-  setIconTextConfigsMap: (map: Map<IconTextsKey, Array<IconTextConfig>>) => void
-  setTextConfigMap: (map: Map<TextKey, TextConfig>) => void
-  setImageMap: (map: Map<ImageKey, ImageSourcePropType>) => void
-  setDateFormat: (format: DateFormat) => void
-  setDebugging: (debugging: boolean) => void
-  setCustomUserAgent: (userAgent: string) => void
-  setErrorStringMap: (map: Map<ErrorCode, string>) => void
-}
-
-export interface SdkVersion {
-  native: string
-  rn?: string
-}
-
-export interface Configuration {
-  endpoint: string
-  appId: string
-  settingsManagement?: SettingsManagement
-}
-
-export interface SettingsManagement {
-  enableBiometricsPin: boolean
-}
-
-export class SecurityQuestion {
-  title: string
-  inputType?: InputType
-
-  constructor(title: string, inputType?: InputType) {
-    this.title = title
-    this.inputType = inputType
-  }
+  ) => void;
+  setDismissOnCallbackMap: (map: Map<ErrorCode, boolean>) => void;
+  moveTaskToFront: () => void;
+  moveRnTaskToFront: () => void;
+  setTextConfigsMap: (map: Map<TextsKey, TextConfig[]>) => void;
+  setIconTextConfigsMap: (
+    map: Map<IconTextsKey, Array<IconTextConfig>>,
+  ) => void;
+  setTextConfigMap: (map: Map<TextKey, TextConfig>) => void;
+  setImageMap: (map: Map<ImageKey, ImageSourcePropType>) => void;
+  setDateFormat: (format: DateFormat) => void;
+  setDebugging: (debugging: boolean) => void;
+  setCustomUserAgent: (userAgent: string) => void;
+  setErrorStringMap: (map: Map<ErrorCode, string>) => void;
 }
 
 export enum TextsKey {
@@ -367,37 +322,81 @@ export enum ErrorCode {
   loginInfoMissing = '155721',
 }
 
+export class SecurityQuestion {
+  title: string
+  inputType?: InputType
+
+  constructor(title: string, inputType?: InputType) {
+    this.title = title
+    this.inputType = inputType
+  }
+}
+
+export interface Configuration {
+  endpoint: string;
+  appId: string;
+  settingsManagement?: SettingsManagement;
+}
+
+export type EventListener = (event: ExecuteEvent) => void
 export type SuccessCallback = (result: SuccessResult) => void
 export type LoginSuccessCallback = (result: LoginResult) => void
-export type CompletedCallback = () => void
+export type CompleteCallback = () => void
 export type ErrorCallback = (error: Error) => void
+export interface SdkVersion {
+  native: string;
+  rn?: string;
+}
 
 export interface SuccessResult {
-  result: ExecuteResult
-  warning?: ExecuteWarning
+  result: ExecuteResult;
+  warning?: ExecuteWarning;
 }
 
 export interface Error {
-  code?: string
-  errorString?: string
-  message: string
+  code?: string;
+  message: string;
+}
+
+export interface LoginResult {
+  userToken?: string;
+  encryptionKey?: string;
+  refreshToken?: string;
+  oauthInfo?: OauthInfo;
+}
+
+export interface OauthInfo {
+  provider?: string;
+  scope?: string[];
+  socialUserUUID?: string;
+  socialUserInfo?: SocialUserInfo;
+}
+
+export interface SocialUserInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface ExecuteResult {
-  resultType: ExecuteResultType
-  status: ExecuteResultStatus
-  data?: ExecuteResultData
+  resultType: ExecuteResultType;
+  status: ExecuteResultStatus;
+  data?: ExecuteResultData;
 }
 
 export interface ExecuteWarning {
-  warningType: ErrorCode
-  warningString: string
+  warningType: ErrorCode;
+  warningString: string;
 }
 
 export interface ExecuteResultData {
-  signature?: string
-  signedTransaction?: string
-  txHash?: string
+  signature?: string;
+  signedTransaction?: string;
+  txHash?: string;
+}
+
+export interface SettingsManagement {
+  enableBiometricsPin: boolean;
 }
 
 export class IconTextConfig {
@@ -421,7 +420,7 @@ export class TextConfig {
     font?: string,
   ) {
     this.text = text
-    if (Array.isArray(gradientColorsOrTextColor)) {
+    if(Array.isArray(gradientColorsOrTextColor)){
       this.gradientColors = gradientColorsOrTextColor
     } else {
       this.textColor = gradientColorsOrTextColor
@@ -466,32 +465,8 @@ export enum InputType {
   datePicker = 'datePicker',
 }
 
-// ==========================
-// MARK: Social Login
-// ==========================
-
 export enum SocialProvider {
   Google = 'Google',
   Facebook = 'Facebook',
   Apple = 'Apple',
-}
-
-export interface LoginResult {
-  userToken?: string
-  encryptionKey?: string
-  refreshToken?: string
-  oauthInfo?: OauthInfo
-}
-
-export interface OauthInfo {
-  provider?: string
-  scope?: string[]
-  socialUserUUID?: string
-  socialUserInfo?: SocialUserInfo
-}
-
-export interface SocialUserInfo {
-  name?: string
-  email?: string
-  phone?: string
 }
