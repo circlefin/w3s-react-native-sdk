@@ -313,18 +313,13 @@ private extension RNWalletSdk {
         let challengeStatus = result.status.rawValue
         let challengeType = result.resultType.rawValue
         var dismiss = false
-
-        let dataDict: [String: Any] = [
-            "signature": result.data?.signature,
-            "signedTransaction": result.data?.signedTransaction,
-            "txHash": result.data?.txHash
-        ].compactMapValues { $0 }
-
         var dict: [String: Any] = [
             "result": [
                 "status": challengeStatus,
                 "resultType": challengeType,
-                "data": dataDict
+                "data": [
+                    "signature": result.data?.signature
+                ]
             ]
         ]
 
