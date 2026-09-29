@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'CircleProgrammableWalletSDK_static', '1.4.0'
+  s.dependency 'CircleProgrammableWalletSDK_static', '1.4.3'
 
   # Swift/Objective-C compatibility
   s.pod_target_xcconfig = {
