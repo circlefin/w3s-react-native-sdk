@@ -204,9 +204,14 @@ public class ProgrammablewalletRnSdkModule: Module {
         Function("moveTaskToFront") {
             DispatchQueue.main.async {
                 guard let sdkVc = self.sdkNavigationController else { return }
-                let topMostVC = UIApplication.shared.topMostViewController()
+                guard sdkVc.presentingViewController == nil, !sdkVc.isBeingDismissed else { return }
+                guard let topMostVC = UIApplication.shared.topMostViewController() else { return }
+                guard let presentingWindow = topMostVC.view.window else { return }
                 sdkVc.modalPresentationStyle = .overFullScreen
-                topMostVC?.present(sdkVc, animated: true)
+                sdkVc.view.frame = presentingWindow.bounds
+                // Preserve UIKit's current system safe area when re-presenting the cached controller.
+                sdkVc.additionalSafeAreaInsets = .zero
+                topMostVC.present(sdkVc, animated: true)
                 print("moveTaskToFront")
             }
         }

@@ -1,6 +1,6 @@
 {
   "name": "@circle-fin/w3s-pw-react-native-sdk",
-  "version": "2.2.3",
+  "version": "2.2.5",
   "packageManager": "yarn@1.22.22",
   "description": "React Native SDK for Circle Programmable Wallet",
   "main": "build/index.js",
@@ -91,7 +91,8 @@
     "react-native": "0.81.5",
     "react-test-renderer": "~19.1.0",
     "ts-jest": "^29.4.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "yaml": "^2.8.3"
   },
   "peerDependencies": {
     "expo": "*",
@@ -105,12 +106,12 @@
     }
   },
   "resolutions": {
-    "@xmldom/xmldom": "0.8.13",
+    "@xmldom/xmldom": "0.8.15",
     "form-data": "4.0.6",
-    "js-yaml": "4.3.0",
+    "js-yaml": "4.3.2",
     "node-forge": "1.4.0",
-    "postcss": "8.5.22",
-    "undici": "6.27.0",
+    "postcss": "8.5.23",
+    "undici": "6.28.0",
     "uuid": "11.1.1"
   }
 }
