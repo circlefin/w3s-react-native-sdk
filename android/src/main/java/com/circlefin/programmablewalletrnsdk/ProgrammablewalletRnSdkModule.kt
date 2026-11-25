@@ -380,15 +380,6 @@ class ProgrammablewalletRnSdkModule : Module(), EventListener {
               throw CodedException(e)
             }
         }
-
-        AsyncFunction("setValueAsync") { value: String ->
-            // Send an event to JavaScript.
-            sendEvent(
-                "onChange", mapOf(
-                    "value" to value
-                )
-            )
-        }
     }
 
     override fun onEvent(event: ExecuteEvent) {
